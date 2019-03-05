@@ -13,13 +13,26 @@
 
 // stub file .. replace it with your own DBFile.cc
 
+Record temp1;
 
 void *producer(void *arg) {
 
-	cout << "produce" << endl;
-	inutil *myArgs = (inutil*)arg;
-	Record temp = myArgs->rec;
-	myArgs->pipe->Insert(&temp);
+
+	char *region = "region";
+	char *catalog_path = "catalog";
+	Schema *testSchema = new Schema(catalog_path, region);
+
+
+	//cout << "produce" << endl;
+	inutil *myArgs = (inutil *)arg;
+
+	//Pipe *myPipe = (Pipe *)arg;
+	cout << "rec print ";
+	//temp1.Print(testSchema);
+
+	//myPipe->Insert(&temp1);
+	myArgs->rec->Print(testSchema);
+	//myArgs->pipe->Insert(myArgs->rec);
 }
 
 void *consumer(void *args) {
@@ -56,6 +69,7 @@ SortedFile::SortedFile() : input(100), output(100) {
 	pageFlag = 0;
 	pageNumber = 0;
 	m = read;
+	
 }
 
 int SortedFile::Create(char *f_path, fType f_type, SortInfo *startup) {
@@ -130,6 +144,11 @@ int SortedFile::Close() {
 
 void SortedFile::Add(Record &rec) {	
 	
+	char *region = "region";
+	char *catalog_path = "catalog";
+	Schema *testSchema = new Schema(catalog_path, region);
+	Record *temp = new Record;
+	temp->Copy(&rec);
 	if (m == read) {
 		/*Record temp;
 		while (GetNext(temp) == 1) {
@@ -139,8 +158,11 @@ void SortedFile::Add(Record &rec) {
 		m = write;
 	}
 
-	cout << "add" << endl;
-	inutil readArgs = { &input, rec };
+	cout << "main rec " ;
+	//temp1.Print(testSchema);
+	//cout << "add" << endl;
+	rec.Print(testSchema);
+	inutil readArgs = { &input, temp };
 	pthread_create(&thread1, NULL, producer, (void*)&readArgs);
 	
 }

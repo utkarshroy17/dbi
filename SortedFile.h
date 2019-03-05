@@ -14,7 +14,8 @@ typedef enum { read, write } mode;
 typedef struct {
 
 	Pipe *pipe;
-	Record rec;
+	Record *rec;
+
 }inutil;
 
 typedef struct {
