@@ -16,7 +16,7 @@
 Record temp1;
 
 void *producer(void *arg) {
-
+	cout << " one" << endl;
 
 	char *region = "region";
 	char *catalog_path = "catalog";
@@ -31,7 +31,8 @@ void *producer(void *arg) {
 	//temp1.Print(testSchema);
 
 	//myPipe->Insert(&temp1);
-	myArgs->rec->Print(testSchema);
+	Record *dummy = &(myArgs->rec);
+	dummy->Print(testSchema);
 	//myArgs->pipe->Insert(myArgs->rec);
 }
 
@@ -64,12 +65,13 @@ void *consumer(void *args) {
 
 }
 
-SortedFile::SortedFile() : input(100), output(100) {
+SortedFile::SortedFile(){
 	curPageIndex = 0;
 	pageFlag = 0;
 	pageNumber = 0;
 	m = read;
-	
+	input = new Pipe(100);
+	output = new Pipe(100);
 }
 
 int SortedFile::Create(char *f_path, fType f_type, SortInfo *startup) {
@@ -128,43 +130,43 @@ void SortedFile::MoveFirst() {
 int SortedFile::Close() {
 	//Close an opened File
 
-	if (m == write) {
-		oututil o = { &input, &output, &sortorder };
+	// if (m == write) {
+	// 	oututil o = { &input, &output, &sortorder };
 
-		pthread_create(&thread2, NULL, consumer, (void*)&o);
+	// 	pthread_create(&thread2, NULL, consumer, (void*)&o);
 
-		BigQ bq(input, output, sortorder, 2);
+	// 	BigQ bq(input, output, sortorder, 2);
 
-		pthread_join(thread1, NULL);
-		pthread_join(thread2, NULL);
-	}
+	// 	pthread_join(thread1, NULL);
+	// 	pthread_join(thread2, NULL);
+	// }
 
-	return currFile.Close();
+	// return currFile.Close();
 }
 
+
+	
 void SortedFile::Add(Record &rec) {	
 	
-	char *region = "region";
-	char *catalog_path = "catalog";
-	Schema *testSchema = new Schema(catalog_path, region);
-	Record *temp = new Record;
-	temp->Copy(&rec);
-	if (m == read) {
-		/*Record temp;
-		while (GetNext(temp) == 1) {
-			inutil readArgs = { &input, temp };
-			pthread_create(&thread1, NULL, producer, (void*)&readArgs);
-		}*/
-		m = write;
-	}
+	cout << "Calling Add, SortedFile.cc \n";
 
-	cout << "main rec " ;
-	//temp1.Print(testSchema);
-	//cout << "add" << endl;
-	rec.Print(testSchema);
-	inutil readArgs = { &input, temp };
-	pthread_create(&thread1, NULL, producer, (void*)&readArgs);
+	Record *temp = new Record;
+	// temp->Copy(&rec);
 	
+	if (m == read) {
+		m = write;
+		OrderMaker dummy; //TODO: replace with working orderMaker
+		bq = new BigQ(*input, *output, dummy, 2);
+	}
+	
+	cout << "Adding record to input pipe in SortedFile \n";
+
+	// char *region = "region";
+	// char *catalog_path = "catalog";
+	// Schema *testSchema = new Schema(catalog_path, region);	//TODO: this is hardcoded to religion. Change it
+	// temp->Print(testSchema);
+	
+	// input->Insert(temp);	//TODO: uncomment this
 }
 
 int SortedFile::GetNext(Record &fetchme) {

@@ -29,7 +29,7 @@ public:
 
 	// this sets up the pipeline; the parameter is the number of
 	// records to buffer
-	Pipe (int bufferSize);	
+	Pipe (int bufferSize = 100);	
 	virtual ~Pipe();
 
 	// This inserts a record into the pipeline; note that if the
@@ -48,6 +48,8 @@ public:
 	// shut down the pipepine; used by the consumer to signal that 
 	// there is no more data that is going to be added into the pipe
 	void ShutDown ();
+
+	void Get();
 
 };
 

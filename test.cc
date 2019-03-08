@@ -1,5 +1,4 @@
 #include "test.h"
-#include "BigQ.h"
 #include <pthread.h>
 #include <math.h>
 #include <iostream>
@@ -12,11 +11,11 @@ int add_data(FILE *src, int numrecs, int &res) {
 	DBFile dbfile;
 	dbfile.Open(rel->path());
 	Record temp;
-	
-
-	int proc = 0;
+	int proc = 0;	
 	int xx = 20000;
-	while ((res = temp.SuckNextRecord(rel->schema(), src)) && ++proc < numrecs) {
+	while ((res = temp.SuckNextRecord(rel->schema(), src)) && ++proc <= numrecs) {	//Changed < numrecs to <= numrecs
+		cout << "\n Adding Record in add_data, test.cc  \n";
+		temp.Print(rel->schema());
 		dbfile.Add(temp);		
 		if (proc == xx) cerr << "\t ";
 		if (proc % xx == 0) cerr << ".";
@@ -55,7 +54,7 @@ void test1() {
 	srand48(time(NULL));
 
 	int proc = 1, res = 1, tot = 0;
-	while (proc && res) {
+	// while (proc && res) {	//TODO: uncommented the while
 		int x = 1;
 		/*while (x < 1 || x > 3) {
 			cout << "\n select option for : " << rel->path() << endl;
@@ -73,7 +72,7 @@ void test1() {
 		else {
 			test3();
 		}
-	}
+	// }
 	cout << "\n create finished.. " << tot << " recs inserted\n";
 	fclose(tblfile);
 }

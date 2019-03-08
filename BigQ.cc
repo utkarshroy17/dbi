@@ -108,16 +108,21 @@ void addRunToFile(threadutil *tu) {
 void *sortRecs(void *arg) {
 	
 	threadutil *tu = (threadutil*)arg;
+
+	cout << "Calling sortRecs, BigQ.cc \n";
+	tu->inPipe->Get();
+	
 	int numRuns = 0, isPageEmpty, numPages = 0;
 	Record *tempRecord, *recInsert;
 	Record getRec;
 	Page curPage, tempPage;
 	
 	tempFile.Open(0, "temp");
+	
 
 	while (tu->inPipe->Remove(&getRec)) {
 	
-		cout << "inpipe" << endl;
+		cout << "Called tu->inPipe->Remove sortRecs, BiqQ.cc \n";
 		tempRecord = new Record;
 		tempRecord->Copy(&getRec);
 
@@ -159,6 +164,7 @@ void *sortRecs(void *arg) {
 
 BigQ :: BigQ (Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen) {
 	// read data from in pipe sort them into runlen pages
+	cout << "Calling BigQ constructor \n";
 
 	threadutil tu = { &in, &out, &sortorder, runlen };
 	g_order = &sortorder;
@@ -167,13 +173,14 @@ BigQ :: BigQ (Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen) {
 
 	pthread_create(&worker, NULL, sortRecs, (void *)&tu);
 
-    // construct priority queue over sorted runs and dump sorted data 
- 	// into the out pipe
+	cout << "Worker Thread Created BigQ.cc \n";
+	// pthread_join(worker, NULL); //TODO: When to call BigQ worker thread join?
+	// cout << "Worker Thread joined BigQ.cc \n";
 
-    // finally shut down the out pipe
-	pthread_join(worker, NULL);
+  // construct priority queue over sorted runs and dump sorted data into the out pipe
+  // finally shut down the out pipe
 	
-	out.ShutDown();
+	// out.ShutDown();
 	
 }
 

@@ -9,12 +9,11 @@
 #include "Pipe.h"
 #include <vector>
 
-typedef enum { read, write } mode;
 
 typedef struct {
 
 	Pipe *pipe;
-	Record *rec;
+	Record rec;
 
 }inutil;
 
@@ -34,9 +33,8 @@ class SortedFile : virtual public GenericDBFile {
 	Page currPage;
 	Record *currRec;
 	File currFile;
-	Pipe input;
-	Pipe output;	
-	mode m;
+	Pipe *input;
+	Pipe *output;	
 	ofstream out;
 	pthread_t thread1;
 	pthread_t thread2;
