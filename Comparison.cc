@@ -5,6 +5,7 @@
 
 #include "Comparison.h"
 
+using namespace std;
 
 Comparison::Comparison()
 {
@@ -102,6 +103,23 @@ OrderMaker :: OrderMaker(Schema *schema) {
         }
 }
 
+int OrderMaker :: GetNumAtts () {
+	return numAtts;
+}
+
+int* OrderMaker :: GetWhichAtts () {
+	return whichAtts;
+}
+
+Type* OrderMaker :: GetWhichTypes () {
+	return whichTypes;
+}
+
+void OrderMaker :: Set (int n, int* wA, Type* wT) {
+	numAtts = n;
+	copy(wA, wA+n, whichAtts);
+	copy(wT, wT+n, whichTypes);
+}
 
 void OrderMaker :: Print () {
 	printf("NumAtts = %5d\n", numAtts);
@@ -140,13 +158,13 @@ int CNF :: GetSortOrders (OrderMaker &left, OrderMaker &right) {
 			continue;
 		}
 
-		// now verify that it operates over atts from both tables
+		// now verify that it operates over atts from both tables	- not necessary. continue
 		if (!((orList[i][0].operand1 == Left && orList[i][0].operand2 == Right) ||
 		      (orList[i][0].operand2 == Left && orList[i][0].operand1 == Right))) {
 			//continue;		
 		}
 
-		// since we are here, we have found a join attribute!!!
+		// since we are here, we have found a join attribute!!! - not really. we are skipping previous check
 		// so all we need to do is add the new comparison info into the
 		// relevant structures
 		if (orList[i][0].operand1 == Left) {
@@ -607,6 +625,11 @@ void CNF :: GrowFromParseTree (struct AndList *parseTree, Schema *mySchema,
 	// and get the record
 	literal.SuckNextRecord (&outSchema, outRecFile);
 
+	cout << "literal is \n"; 
+	Schema* temp = &outSchema;
+	literal.Print(temp);
+	cout << endl;
+	
 	// close the record file
 	fclose (outRecFile);
 

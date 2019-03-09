@@ -59,6 +59,10 @@ public:
 
 	// print to the screen
 	void Print ();
+		int GetNumAtts ();
+	int* GetWhichAtts ();
+	Type* GetWhichTypes ();
+	void Set (int n, int* wA, Type* wT );
 };
 
 class Record;
