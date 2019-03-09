@@ -15,6 +15,20 @@ typedef struct {
 	int runLen;
 }threadutil;
 
+struct Util{
+	Pipe *inPipe;
+	Pipe *outPipe;
+	OrderMaker *order;
+	int runLen;
+	Util(Pipe *i, Pipe *o, OrderMaker *s, int l){
+		inPipe = i;
+		outPipe = o;
+		order = s;
+		runLen = l;
+	}
+	~Util();
+};
+	
 class BigQ {
 
 public:

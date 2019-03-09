@@ -9,7 +9,8 @@ int PageNumber = 0;
 vector<Record*> recVector;
 
 //TODO : Remove region and catalog path
-void mergeRuns( threadutil *tu) {
+// void mergeRuns( threadutil *tu) {
+void mergeRuns( Util *tu) {
 
 	vector<Page*> pageVector;
 	vector<Record*> recordVector;
@@ -79,7 +80,8 @@ bool compRecs(Record *left, Record *right)
 		return false;
 }
 
-void addRunToFile(threadutil *tu) {
+// void addRunToFile(threadutil *tu) {
+void addRunToFile(Util *tu) {
 
 	Record *curRec = NULL;
 	Page curPage;
@@ -107,7 +109,8 @@ void addRunToFile(threadutil *tu) {
 
 void *sortRecs(void *arg) {
 	
-	threadutil *tu = (threadutil*)arg;
+	// threadutil *tu = (threadutil*)arg;
+	Util* tu = (Util*)arg;
 
 	cout << "Calling sortRecs, BigQ.cc \n";
 	tu->inPipe->Get();
@@ -166,12 +169,14 @@ BigQ :: BigQ (Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen) {
 	// read data from in pipe sort them into runlen pages
 	cout << "Calling BigQ constructor \n";
 
-	threadutil tu = { &in, &out, &sortorder, runlen };
+	// threadutil tu = { &in, &out, &sortorder, runlen };
+	Util* util = new Util(&in, &out, &sortorder, runlen);
 	g_order = &sortorder;
 
 	pthread_t worker;
 
-	pthread_create(&worker, NULL, sortRecs, (void *)&tu);
+	// pthread_create(&worker, NULL, sortRecs, (void *)&tu);
+	pthread_create(&worker, NULL, sortRecs, (void *)util);
 
 	cout << "Worker Thread Created BigQ.cc \n";
 	// pthread_join(worker, NULL); //TODO: When to call BigQ worker thread join?

@@ -166,7 +166,7 @@ void SortedFile::Add(Record &rec) {
 	// Schema *testSchema = new Schema(catalog_path, region);	//TODO: this is hardcoded to religion. Change it
 	// temp->Print(testSchema);
 	
-	// input->Insert(temp);	//TODO: uncomment this
+	input->Insert(temp);	//TODO: uncomment this
 }
 
 int SortedFile::GetNext(Record &fetchme) {
