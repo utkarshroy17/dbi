@@ -3,3 +3,5 @@
 
 #DBFiles
 *.bin
+
+.vs/
