@@ -11,30 +11,11 @@
 #include <iostream>
 #include <fstream>
 
+#define PIPE_SIZE 100
+
 // stub file .. replace it with your own DBFile.cc
 
 Record temp1;
-
-void *producer(void *arg) {
-	cout << " one" << endl;
-
-	char *region = "partsupp";
-	char *catalog_path = "catalog";
-	Schema *testSchema = new Schema(catalog_path, region);
-
-
-	//cout << "produce" << endl;
-	inutil *myArgs = (inutil *)arg;
-
-	//Pipe *myPipe = (Pipe *)arg;
-	cout << "rec print ";
-	//temp1.Print(testSchema);
-
-	//myPipe->Insert(&temp1);
-	Record *dummy = &(myArgs->rec);
-	dummy->Print(testSchema);
-	//myArgs->pipe->Insert(myArgs->rec);
-}
 
 void *consumer(void *args) {
 
@@ -65,13 +46,34 @@ void *consumer(void *args) {
 
 }
 
+void SortedFile::MergeOutputPipeToFile(){	//TODO: Complete
+
+}
+
+void SortedFile::ChangeReadToWrite(){
+	if(m == READ){
+		m = WRITE;
+		input = new Pipe(PIPE_SIZE);
+		output = new Pipe(PIPE_SIZE);
+		bq = new BigQ(*input, *output, sortorder, runLength);
+	}
+}
+
+void SortedFile::ChangeWriteToRead(){
+	if(m == WRITE){
+		m = READ;
+		MergeOutputPipeToFile();
+		MoveFirst();
+	}
+}
+
 SortedFile::SortedFile(){
 	curPageIndex = 0;
 	pageFlag = 0;
 	pageNumber = 0;
-	m = read;
-	input = new Pipe(100);
-	output = new Pipe(100);
+	m = READ;
+		// input = new Pipe(100);
+		// output = new Pipe(100);
 }
 
 int SortedFile::Create(char *f_path, fType f_type, SortInfo *startup) {
@@ -128,17 +130,17 @@ void SortedFile::MoveFirst() {
 }
 
 int SortedFile::Close() {
+
+	cout << "\n Calling SortedFile CLOSE \n ";
+	ChangeWriteToRead();
 	//Close an opened File
 
-	// if (m == write) {
+	// if (m == WRITE) {
 	// 	oututil o = { &input, &output, &sortorder };
 
-	// 	pthread_create(&thread2, NULL, consumer, (void*)&o);
 
 	// 	BigQ bq(input, output, sortorder, 2);
 
-	// 	pthread_join(thread1, NULL);
-	// 	pthread_join(thread2, NULL);
 	// }
 
 	// return currFile.Close();
@@ -148,14 +150,9 @@ int SortedFile::Close() {
 	
 void SortedFile::Add(Record &rec) {	
 	
-	if (m == read) {
-		m = write;
-		OrderMaker dummy; //TODO: replace with working orderMaker
-		bq = new BigQ(*input, *output, dummy, 2);
-	}
-	
 	cout << "Adding record to input pipe in SortedFile \n";
-
+	ChangeReadToWrite();
+	
 	// char *region = "partsupp";
 	// char *catalog_path = "catalog";
 	// Schema *testSchema = new Schema(catalog_path, region);	//TODO: this is hardcoded to religion. Change it

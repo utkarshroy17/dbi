@@ -8,13 +8,6 @@
 
 using namespace std;
 
-typedef struct {
-	Pipe *inPipe;
-	Pipe *outPipe;
-	OrderMaker *order;
-	int runLen;
-}threadutil;
-
 struct Util{
 	Pipe *inPipe;
 	Pipe *outPipe;

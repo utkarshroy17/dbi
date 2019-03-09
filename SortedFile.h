@@ -8,7 +8,9 @@
 #include "DBFile.h"
 #include "Pipe.h"
 #include <vector>
+#include "BigQ.h"
 
+typedef enum { READ, WRITE } mode;
 
 typedef struct {
 
@@ -33,12 +35,15 @@ class SortedFile : virtual public GenericDBFile {
 	Page currPage;
 	Record *currRec;
 	File currFile;
+	
+	ofstream out;
+
+	OrderMaker sortorder;
+	int runLength = 2; //TODO: Change this
+	mode m;
+	BigQ *bq;
 	Pipe *input;
 	Pipe *output;	
-	ofstream out;
-	pthread_t thread1;
-	pthread_t thread2;
-	OrderMaker sortorder;
 
 public:
 	/*SortedFile();*/
@@ -54,6 +59,10 @@ public:
 	void Add(Record &addme);
 	int GetNext(Record &fetchme);
 	int GetNext(Record &fetchme, CNF &cnf, Record &literal);
-	/*void* producer(void *arg);
-	void* consumer(void *arg);*/
+
+	void ChangeReadToWrite();
+	void ChangeWriteToRead();
+	void MergeOutputPipeToFile();
+	
+	// void* consumer(void *arg);
 };

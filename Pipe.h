@@ -29,7 +29,7 @@ public:
 
 	// this sets up the pipeline; the parameter is the number of
 	// records to buffer
-	Pipe (int bufferSize = 100);	
+	Pipe (int bufferSize);	
 	virtual ~Pipe();
 
 	// This inserts a record into the pipeline; note that if the

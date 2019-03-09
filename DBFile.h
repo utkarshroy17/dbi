@@ -8,10 +8,8 @@
 #include "File.h"
 #include "Comparison.h"
 #include "ComparisonEngine.h"
-#include "BigQ.h"
 
 typedef enum { heap, sorted, tree } fType;
-typedef enum { read, write } mode;
 
 // stub DBFile header..replace it with your own DBFile.h 
 
@@ -23,8 +21,6 @@ struct SortInfo {
 class GenericDBFile {
 	
 public: //TODO: Why are all these functions public?
-	mode m;
-	BigQ *bq;
 	virtual int Create(char *fpath, fType ftype, SortInfo *startup) = 0;
 	virtual int Open(char *fpath) = 0;
 	virtual int Close() = 0;

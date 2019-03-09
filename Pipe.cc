@@ -47,9 +47,6 @@ Pipe :: ~Pipe () {
 
 
 void Pipe :: Insert (Record *insertMe) {
-
-	// cout << " Pipe insert \n";
-
 	// first, get a mutex on the pipeline
 	pthread_mutex_lock (&pipeMutex);
 

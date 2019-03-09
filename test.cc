@@ -75,6 +75,7 @@ void test1() {
 	// }
 	cout << "\n create finished.. " << tot << " recs inserted\n";
 	fclose(tblfile);
+	dbfile.Close(); // TODO: Remove this line
 }
 
 //sequential scan of a DBfile 
