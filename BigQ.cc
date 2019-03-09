@@ -9,7 +9,8 @@ int PageNumber = 0;
 vector<Record*> recVector;
 
 //TODO : Remove region and catalog path
-void mergeRuns( threadutil *tu) {
+// void mergeRuns( threadutil *tu) {
+void mergeRuns( Util *tu) {
 
 	vector<Page*> pageVector;
 	vector<Record*> recordVector;
@@ -79,7 +80,8 @@ bool compRecs(Record *left, Record *right)
 		return false;
 }
 
-void addRunToFile(threadutil *tu) {
+// void addRunToFile(threadutil *tu) {
+void addRunToFile(Util *tu) {
 
 	Record *curRec = NULL;
 	Page curPage;
@@ -107,19 +109,33 @@ void addRunToFile(threadutil *tu) {
 
 void *sortRecs(void *arg) {
 	
-	threadutil *tu = (threadutil*)arg;
+	// threadutil *tu = (threadutil*)arg;
+	Util* tu = (Util*)arg;
+
+	cout << "Calling sortRecs, BigQ.cc \n";
+	tu->inPipe->Get();
+	
 	int numRuns = 0, isPageEmpty, numPages = 0;
 	Record *tempRecord, *recInsert;
-	Record getRec;
+	Record *getRec = new Record();
 	Page curPage, tempPage;
 	
 	tempFile.Open(0, "temp");
-
-	while (tu->inPipe->Remove(&getRec)) {
 	
-		cout << "inpipe" << endl;
+	
+	char *region = "partsupp";
+	char *catalog_path = "catalog";
+	Schema *testSchema = new Schema(catalog_path, region);	//TODO: this is hardcoded to religion. Change it
+
+	while (tu->inPipe->Remove(getRec)) {
+	
+	getRec->Print(testSchema);
+		
+		
+		cout << "Called tu->inPipe->Remove sortRecs, BiqQ.cc \n";
+
 		tempRecord = new Record;
-		tempRecord->Copy(&getRec);
+		tempRecord->Copy(getRec);
 
 		recVector.push_back(tempRecord);
 
@@ -159,21 +175,25 @@ void *sortRecs(void *arg) {
 
 BigQ :: BigQ (Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen) {
 	// read data from in pipe sort them into runlen pages
+	cout << "Calling BigQ constructor \n";
 
-	threadutil tu = { &in, &out, &sortorder, runlen };
+	// threadutil tu = { &in, &out, &sortorder, runlen };
+	Util* util = new Util(&in, &out, &sortorder, runlen);
 	g_order = &sortorder;
 
 	pthread_t worker;
 
-	pthread_create(&worker, NULL, sortRecs, (void *)&tu);
+	// pthread_create(&worker, NULL, sortRecs, (void *)&tu);
+	pthread_create(&worker, NULL, sortRecs, (void *)util);
 
-    // construct priority queue over sorted runs and dump sorted data 
- 	// into the out pipe
+	cout << "Worker Thread Created BigQ.cc \n";
+	// pthread_join(worker, NULL); //TODO: When to call BigQ worker thread join?
+	// cout << "Worker Thread joined BigQ.cc \n";
 
-    // finally shut down the out pipe
-	pthread_join(worker, NULL);
+  // construct priority queue over sorted runs and dump sorted data into the out pipe
+  // finally shut down the out pipe
 	
-	out.ShutDown();
+	// out.ShutDown();
 	
 }
 

@@ -1,9 +1,12 @@
 #include "Pipe.h"
+#include "Schema.h"
 
 #include <iostream>
 #include <stdlib.h> 
 
 Pipe :: Pipe (int bufferSize) {
+
+	// cout << "Pipe initialized " << bufferSize << endl;
 
 	// set up the mutex assoicated with the pipe
 	pthread_mutex_init (&pipeMutex, NULL);
@@ -21,13 +24,17 @@ Pipe :: Pipe (int bufferSize) {
 	}
 
 	totSpace = bufferSize;
-	firstSlot = lastSlot = 0;
+	firstSlot = 0;
+	lastSlot = 0;
+
+	// cout << "firstSlot " << firstSlot << " " << lastSlot << endl;
 
 	// note that the pipe has not yet been turned off
 	done = 0;
 }
 
 Pipe :: ~Pipe () {
+	cout << "Pipe desctructor \n";
 
 	// free everything up!
 	delete [] buffered;
@@ -40,6 +47,8 @@ Pipe :: ~Pipe () {
 
 
 void Pipe :: Insert (Record *insertMe) {
+
+	// cout << " Pipe insert \n";
 
 	// first, get a mutex on the pipeline
 	pthread_mutex_lock (&pipeMutex);
@@ -67,11 +76,16 @@ void Pipe :: Insert (Record *insertMe) {
 
 	// done!
 	pthread_mutex_unlock (&pipeMutex);
+	cout << "2.Pipe Insert " << firstSlot << " " << lastSlot << endl;
 }
 
+void Pipe::Get(){
+	cout << "Pipe.Get " << firstSlot << " " << lastSlot << endl;
+}
 
-int Pipe :: Remove (Record *removeMe) {
-	 
+int Pipe :: Remove (Record *removeMe) {		//https://stackoverflow.com/questions/22288667/c-member-variable-losing-value-after-constructor
+	cout << "Calling Remove Pipe.cc " << firstSlot << " " << lastSlot << endl;	
+
 	// first, get a mutex on the pipeline
 	pthread_mutex_lock (&pipeMutex);
 
@@ -79,12 +93,14 @@ int Pipe :: Remove (Record *removeMe) {
 	// there is, then do the removal
 	if (lastSlot != firstSlot) {
 		
+		cout << "2 Remove Pipe.cc \n";
 		removeMe->Consume (&buffered [firstSlot % totSpace]);
 
 	// if there is not, then we need to wait until the producer
 	// puts some data into the pipeline
 	} else {
 
+		cout << "3 Remove Pipe.cc \n";
 		// the pipeline is empty so we first see if this
 		// is because it was turned off
 		if (done) {
@@ -116,10 +132,14 @@ int Pipe :: Remove (Record *removeMe) {
 	// done!
 	pthread_mutex_unlock (&pipeMutex);
 	return 1;
+
+	cout << "End of Remove, Pipe.cc \n";
 }
 
 
 void Pipe :: ShutDown () {
+
+	cout << "Pipe shutdown \n";
 
 	// first, get a mutex on the pipeline
         pthread_mutex_lock (&pipeMutex);
