@@ -18,7 +18,7 @@ Record temp1;
 void *producer(void *arg) {
 	cout << " one" << endl;
 
-	char *region = "region";
+	char *region = "partsupp";
 	char *catalog_path = "catalog";
 	Schema *testSchema = new Schema(catalog_path, region);
 
@@ -148,11 +148,6 @@ int SortedFile::Close() {
 	
 void SortedFile::Add(Record &rec) {	
 	
-	cout << "Calling Add, SortedFile.cc \n";
-
-	Record *temp = new Record;
-	// temp->Copy(&rec);
-	
 	if (m == read) {
 		m = write;
 		OrderMaker dummy; //TODO: replace with working orderMaker
@@ -161,12 +156,12 @@ void SortedFile::Add(Record &rec) {
 	
 	cout << "Adding record to input pipe in SortedFile \n";
 
-	// char *region = "region";
+	// char *region = "partsupp";
 	// char *catalog_path = "catalog";
 	// Schema *testSchema = new Schema(catalog_path, region);	//TODO: this is hardcoded to religion. Change it
-	// temp->Print(testSchema);
+	// rec.Print(testSchema);
 	
-	input->Insert(temp);	//TODO: uncomment this
+	input->Insert(&rec);	//TODO: uncomment this
 }
 
 int SortedFile::GetNext(Record &fetchme) {

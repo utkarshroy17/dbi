@@ -1,4 +1,5 @@
 #include "Pipe.h"
+#include "Schema.h"
 
 #include <iostream>
 #include <stdlib.h> 
@@ -46,7 +47,8 @@ Pipe :: ~Pipe () {
 
 
 void Pipe :: Insert (Record *insertMe) {
-	cout << "Pipe Insert \n";
+
+	// cout << " Pipe insert \n";
 
 	// first, get a mutex on the pipeline
 	pthread_mutex_lock (&pipeMutex);
@@ -82,7 +84,7 @@ void Pipe::Get(){
 }
 
 int Pipe :: Remove (Record *removeMe) {		//https://stackoverflow.com/questions/22288667/c-member-variable-losing-value-after-constructor
-	cout << "Calling Remove Pipe.cc " << firstSlot << " " << lastSlot << endl;
+	cout << "Calling Remove Pipe.cc " << firstSlot << " " << lastSlot << endl;	
 
 	// first, get a mutex on the pipeline
 	pthread_mutex_lock (&pipeMutex);

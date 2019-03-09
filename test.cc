@@ -15,7 +15,7 @@ int add_data(FILE *src, int numrecs, int &res) {
 	int xx = 20000;
 	while ((res = temp.SuckNextRecord(rel->schema(), src)) && ++proc <= numrecs) {	//Changed < numrecs to <= numrecs
 		cout << "\n Adding Record in add_data, test.cc  \n";
-		temp.Print(rel->schema());
+		// temp.Print(rel->schema());
 		dbfile.Add(temp);		
 		if (proc == xx) cerr << "\t ";
 		if (proc % xx == 0) cerr << ".";

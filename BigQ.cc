@@ -117,17 +117,25 @@ void *sortRecs(void *arg) {
 	
 	int numRuns = 0, isPageEmpty, numPages = 0;
 	Record *tempRecord, *recInsert;
-	Record getRec;
+	Record *getRec = new Record();
 	Page curPage, tempPage;
 	
 	tempFile.Open(0, "temp");
 	
-
-	while (tu->inPipe->Remove(&getRec)) {
 	
+	char *region = "partsupp";
+	char *catalog_path = "catalog";
+	Schema *testSchema = new Schema(catalog_path, region);	//TODO: this is hardcoded to religion. Change it
+
+	while (tu->inPipe->Remove(getRec)) {
+	
+	getRec->Print(testSchema);
+		
+		
 		cout << "Called tu->inPipe->Remove sortRecs, BiqQ.cc \n";
+
 		tempRecord = new Record;
-		tempRecord->Copy(&getRec);
+		tempRecord->Copy(getRec);
 
 		recVector.push_back(tempRecord);
 
