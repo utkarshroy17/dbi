@@ -10,7 +10,6 @@
 #include "SortedFile.h"
 #include <iostream>
 #include <vector>
-// #include "iostream"
 #include "string.h"
 #include "fstream"
 #include <bits/stdc++.h> 
@@ -28,84 +27,12 @@ DBFile::DBFile() {
 
 }
 
-int readMetaFile (char *f_path) {
-	string meta_name(f_path);
-	meta_name.replace(strlen(f_path) - 4, 4, "-meta");
-	cout << "Opening Meta File " << meta_name << endl;
-	string line;
-	ifstream meta (meta_name);
-	getline(meta, line);
-	cout << "line\n";
-
-	if(line.compare("heap") == 0){
-		cout << "heap";
-	}if(line.compare("sorted") == 0){
-		cout << "sorted \n";
-		getline(meta, line);
-		int runLength = stoi (line, nullptr, 10);
-		cout << "runLength " << runLength << endl;
-		getline(meta, line);
-		int numAtts = stoi (line, nullptr, 10);
-		cout << "numAtts " << numAtts << endl;
-		
-		int whichAtts[numAtts];
-		Type whichTypes[numAtts];
-		int i;
-		string word;
-		
-		getline(meta, line);
-		istringstream ss(line);
-		for(i = 0; i < numAtts; i++){
-			ss >> word;
-			whichAtts[i] = stoi(word, nullptr, 10);
-		}
-
-		getline(meta, line);
-		istringstream ss1(line);
-		for(i = 0; i < numAtts; i++){
-			ss1 >> word;
-			if(word == "Int"){
-				whichTypes[i] = Int;
-			}else if(word == "Double"){
-				whichTypes[i] = Double;
-			}else {
-				whichTypes[i] = String;
-			}
-		}
-
-		OrderMaker dummy;
-		dummy.Set(numAtts, whichAtts, whichTypes);
-		dummy.Print();
-		
-		// cout << "whichAtts ";
-		// for(int i = 0; i < numAtts; i++){
-		// 	cout << whichAtts[i] << " ";
-		// }
-		// cout << endl;
-		// cout << "whichTypes ";
-		// for(i = 0; i < numAtts; i++){
-		// 	if(whichTypes[i] == Int){
-		// 		cout << "Int ";
-		// 	}else if(whichTypes[i] == Double){
-		// 		cout << "Double ";
-		// 	}else {
-		// 		cout << "String ";
-		// 	}
-		// }
-		// cout << endl;
-
-	}
+void createMetaFile (char *f_path, fType f_type, void *startup) {	
+	char *metaFilename = new char[100];
+	sprintf(metaFilename, "%s.header", f_path);
+	cout << "Creating Meta File " << metaFilename << endl;
+	ofstream meta(metaFilename);
 	
-	meta.close();
-
-}
-
-void createMetaFile (char *f_path, fType f_type, void *startup) {
-	string meta_name(f_path);
-	meta_name.replace(strlen(f_path) - 4, 4, "-meta");
-	cout << "Creating Meta File " << meta_name << endl;
-	
-	ofstream meta(meta_name);
 	if (f_type == heap){
 		meta << "heap\n";
 	}else {	//sorted file
@@ -140,12 +67,8 @@ void createMetaFile (char *f_path, fType f_type, void *startup) {
 
 int DBFile::Create(char *f_path, fType f_type, SortInfo *startup) {
 
-	//TODO: Place in right path
-	createMetaFile(f_path, f_type, startup);
-	readMetaFile(f_path);
-	
+	createMetaFile(f_path, f_type, startup);	//TODO: Calling this in Create instead of Close. Does it make a difference?
 	//Create .bin file. Open if already created
-
 
 	ofstream out;
 	out.open("metadata.txt");
@@ -167,9 +90,10 @@ int DBFile::Create(char *f_path, fType f_type, SortInfo *startup) {
 int DBFile::Open(char *f_path) {
 	//Open .bin file
 
+	char *metaFilename = new char[100];
+	sprintf(metaFilename, "%s.header", f_path);
 	ifstream infile;
-
-	infile.open("metadata.txt");
+	infile.open(metaFilename);
 
 	vector<string> lines;
 	string temp;

@@ -10,44 +10,100 @@
 #include "BigQ.h"
 #include <iostream>
 #include <fstream>
+#include "string.h"
+#include <bits/stdc++.h> 
 
 #define PIPE_SIZE 100
 
-// stub file .. replace it with your own DBFile.cc
-
 Record temp1;
 
-void *consumer(void *args) {
+void readMetaFile (char *f_path, OrderMaker *&o, int &rl) {
 
-	oututil *o = (oututil *)args;
-	o->inpipe->ShutDown();
+	char *metaFilename = new char[100];
+	sprintf(metaFilename, "%s.header", f_path);
+	cout << "Opening Meta File " << metaFilename << endl;
+	string line;
+	ifstream meta (metaFilename);
+	getline(meta, line);
+	cout << "line\n";
 
-	ComparisonEngine ceng;
+	if(line.compare("heap") == 0){
+		cout << "heap";
+	}if(line.compare("sorted") == 0){
+		cout << "sorted \n";
+		getline(meta, line);
+		int runLength = stoi (line, nullptr, 10);
+		cout << "runLength " << runLength << endl;
+		getline(meta, line);
+		int numAtts = stoi (line, nullptr, 10);
+		cout << "numAtts " << numAtts << endl;
+		
+		int whichAtts[numAtts];
+		Type whichTypes[numAtts];
+		int i;
+		string word;
+		
+		getline(meta, line);
+		istringstream ss(line);
+		for(i = 0; i < numAtts; i++){
+			ss >> word;
+			whichAtts[i] = stoi(word, nullptr, 10);
+		}
 
-	int err = 0;
-	int i = 0;
-
-	Record rec[2];
-
-	Record tempRec;
-	Record *last = NULL, *prev = NULL;
-
-	while (o->outpipe->Remove(&rec[i % 2])) {
-		prev = last;
-		last = &rec[i % 2];
-
-		if (prev && last) {
-			if (ceng.Compare(prev, last, o->order) == 1) {
-				err++;
+		getline(meta, line);
+		istringstream ss1(line);
+		for(i = 0; i < numAtts; i++){
+			ss1 >> word;
+			if(word == "Int"){
+				whichTypes[i] = Int;
+			}else if(word == "Double"){
+				whichTypes[i] = Double;
+			}else {
+				whichTypes[i] = String;
 			}
 		}
-		i++;
-	}
 
+		OrderMaker *sortorder = new OrderMaker();
+		sortorder->Set(numAtts, whichAtts, whichTypes);
+		o = sortorder;
+		rl = runLength;
+		// dummy.Print();
+		
+		// cout << "whichAtts ";
+		// for(int i = 0; i < numAtts; i++){
+		// 	cout << whichAtts[i] << " ";
+		// }
+		// cout << endl;
+		// cout << "whichTypes ";
+		// for(i = 0; i < numAtts; i++){
+		// 	if(whichTypes[i] == Int){
+		// 		cout << "Int ";
+		// 	}else if(whichTypes[i] == Double){
+		// 		cout << "Double ";
+		// 	}else {
+		// 		cout << "String ";
+		// 	}
+		// }
+		// cout << endl;
+
+	}
+	meta.close();
 }
 
 void SortedFile::MergeOutputPipeToFile(){	//TODO: Complete
 
+	cout << "MergeOutputPipeToFile \n";
+	char *region = "partsupp";
+	char *catalog_path = "catalog";
+	Schema *testSchema = new Schema(catalog_path, region);
+
+	input->ShutDown();
+
+	Record *rec = new Record();
+	while (output->Remove(rec)) {
+		cout << "Removing records from outPipe \n";
+		rec->Print(testSchema);	
+	}
 }
 
 void SortedFile::ChangeReadToWrite(){
@@ -55,11 +111,12 @@ void SortedFile::ChangeReadToWrite(){
 		m = WRITE;
 		input = new Pipe(PIPE_SIZE);
 		output = new Pipe(PIPE_SIZE);
-		bq = new BigQ(*input, *output, sortorder, runLength);
+		bq = new BigQ(*input, *output, *sortorder, runLength);
 	}
 }
 
 void SortedFile::ChangeWriteToRead(){
+	cout << "ChangeWriteToRead \n";
 	if(m == WRITE){
 		m = READ;
 		MergeOutputPipeToFile();
@@ -77,6 +134,8 @@ SortedFile::SortedFile(){
 }
 
 int SortedFile::Create(char *f_path, fType f_type, SortInfo *startup) {
+	sortorder = startup->order;
+	runLength = startup->runlen;
 
 	//Create .bin file. Open if already created
 
@@ -110,6 +169,11 @@ void SortedFile::Load(Schema &f_schema, const char *loadpath) {
 
 int SortedFile::Open(char *f_path) {
 	//Open .bin file
+	readMetaFile(f_path, sortorder, runLength);
+	cout << "SortedFile::Open \n";
+	cout << "runLength is " << runLength << endl;
+	cout << "OrderMaker is ";
+	sortorder->Print();
 
 	currFile.Open(1, f_path);
 	return 1;

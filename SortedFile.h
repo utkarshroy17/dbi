@@ -38,8 +38,8 @@ class SortedFile : virtual public GenericDBFile {
 	
 	ofstream out;
 
-	OrderMaker sortorder;
-	int runLength = 2; //TODO: Change this
+	OrderMaker* sortorder;
+	int runLength;
 	mode m;
 	BigQ *bq;
 	Pipe *input;

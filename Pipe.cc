@@ -90,14 +90,12 @@ int Pipe :: Remove (Record *removeMe) {		//https://stackoverflow.com/questions/2
 	// there is, then do the removal
 	if (lastSlot != firstSlot) {
 		
-		cout << "2 Remove Pipe.cc \n";
 		removeMe->Consume (&buffered [firstSlot % totSpace]);
 
 	// if there is not, then we need to wait until the producer
 	// puts some data into the pipeline
 	} else {
 
-		cout << "3 Remove Pipe.cc \n";
 		// the pipeline is empty so we first see if this
 		// is because it was turned off
 		if (done) {

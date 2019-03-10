@@ -32,7 +32,7 @@ void test1() {
 	OrderMaker o;
 	rel->get_sort_order(o);
 
-	int runlen = 2;
+	int runlen = 3;
 	//while (runlen < 1) {
 	/*	cout << "\t\n specify runlength:\n\t ";
 		cin >> runlen;*/

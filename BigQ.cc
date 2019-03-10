@@ -9,7 +9,9 @@ int PageNumber = 0;	//TODO: Move this and recVector inside CreateRuns
 vector<Record*> recVector;
 
 //TODO : Remove region and catalog path
-void mergeRuns( Util *tu) {
+void mergeRuns(Util *tu) {
+
+	cout << "Calling Merge Runs \n";
 
 	vector<Page*> pageVector;
 	vector<Record*> recordVector;
@@ -98,7 +100,7 @@ void addRunToFile() {
 }
 
 
-void createRuns(void *arg) {
+void createRuns(Util *tu) {
 	// cout << "Calling createRuns, BigQ.cc \n";
 	// tu->inPipe->Get();
 	
@@ -113,8 +115,8 @@ void createRuns(void *arg) {
 	Schema *testSchema = new Schema(catalog_path, region);	//TODO: this is hardcoded to religion. Change it
 
 	while (tu->inPipe->Remove(getRec)) {
-		cout << "Called tu->inPipe->Remove createRuns, BiqQ.cc \n";
-		getRec->Print(testSchema);
+		// cout << "Called tu->inPipe->Remove createRuns, BiqQ.cc \n";
+		// getRec->Print(testSchema);
 
 		tempRecord = new Record;
 		tempRecord->Copy(getRec);
@@ -138,13 +140,14 @@ void createRuns(void *arg) {
 
 	if (recVector.size() > 0) {
 		sort(recVector.begin(), recVector.end(), compRecs);
-		addRunToFile(tu);
+		addRunToFile();
 		recVector.clear();
 		numPages = 0;
 		numRuns++;
 	}
 
 	tempFile.Close();
+	cout << "Done with createRuns \n";
 }
 
 
