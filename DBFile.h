@@ -13,19 +13,14 @@ typedef enum { heap, sorted, tree } fType;
 
 // stub DBFile header..replace it with your own DBFile.h 
 
-struct SortInfo {
-	OrderMaker *order;
-	int runlen;
-};
-
 class GenericDBFile {
 	
 public: //TODO: Why are all these functions public?
-	virtual int Create(char *fpath, fType ftype, SortInfo *startup) = 0;
+	virtual int Create(char *fpath, fType ftype, void *startup) = 0;
 	virtual int Open(char *fpath) = 0;
 	virtual int Close() = 0;
 
-	virtual void Load(Schema &myschema, const char *loadpath) = 0;
+	virtual void Load(Schema &myschema, char *loadpath) = 0;
 
 	virtual void MoveFirst() = 0;
 	virtual void Add(Record &addme) = 0;
@@ -43,11 +38,11 @@ private:
 public:
 	DBFile();
 
-	int Create(char *fpath, fType ftype, SortInfo *startup);
+	int Create(char *fpath, fType ftype, void *startup);
 	int Open(char *fpath);
 	int Close();
 
-	void Load(Schema &myschema, const char *loadpath);
+	void Load(Schema &myschema, char *loadpath);
 
 	void MoveFirst();
 	void Add(Record &addme);

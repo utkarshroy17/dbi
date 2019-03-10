@@ -12,19 +12,24 @@
 
 typedef enum { READ, WRITE } mode;
 
-typedef struct {
+//typedef struct {
+//
+//	Pipe *pipe;
+//	Record rec;
+//
+//}inutil;
+//
+//typedef struct {
+//
+//	Pipe *inpipe;
+//	Pipe *outpipe;
+//	OrderMaker *order;
+//}oututil;
 
-	Pipe *pipe;
-	Record rec;
-
-}inutil;
-
-typedef struct {
-
-	Pipe *inpipe;
-	Pipe *outpipe;
+struct SortInfo {
 	OrderMaker *order;
-}oututil;
+	int runlen;
+};
 
 
 class SortedFile : virtual public GenericDBFile {
@@ -35,11 +40,12 @@ class SortedFile : virtual public GenericDBFile {
 	Page currPage;
 	Record *currRec;
 	File currFile;
+	Page *toBeMerged;
+	int pagePtrForMerge = 0;
+	SortInfo *si;
 	
 	ofstream out;
 
-	OrderMaker* sortorder;
-	int runLength;
 	mode m;
 	BigQ *bq;
 	Pipe *input;
@@ -49,11 +55,11 @@ public:
 	/*SortedFile();*/
 	SortedFile();
 
-	int Create(char *fpath, fType ftype, SortInfo *startup);
+	int Create(char *fpath, fType ftype, void *startup);
 	int Open(char *fpath);
 	int Close();
 
-	void Load(Schema &myschema, const char *loadpath);
+	void Load(Schema &myschema, char *loadpath);
 
 	void MoveFirst();
 	void Add(Record &addme);
@@ -63,6 +69,7 @@ public:
 	void ChangeReadToWrite();
 	void ChangeWriteToRead();
 	void MergeOutputPipeToFile();
+	int GetNew(Record *rec);
 	
 	// void* consumer(void *arg);
 };

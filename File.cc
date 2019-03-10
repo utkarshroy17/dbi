@@ -79,6 +79,7 @@ int Page :: Append (Record *addMe) {
 	curSizeInBytes += ((int *) b)[0];
 	myRecs->Insert(addMe);
 	numRecs++;
+	//cout << "number of records in page " << numRecs << endl;
 
 	return 1;
 }

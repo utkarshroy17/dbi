@@ -116,7 +116,7 @@ void createRuns(Util *tu) {
 
 	while (tu->inPipe->Remove(getRec)) {
 		// cout << "Called tu->inPipe->Remove createRuns, BiqQ.cc \n";
-		// getRec->Print(testSchema);
+		 //getRec->Print(testSchema);
 
 		tempRecord = new Record;
 		tempRecord->Copy(getRec);

@@ -65,7 +65,7 @@ void createMetaFile (char *f_path, fType f_type, void *startup) {
 	}
 }
 
-int DBFile::Create(char *f_path, fType f_type, SortInfo *startup) {
+int DBFile::Create(char *f_path, fType f_type, void *startup) {
 
 	createMetaFile(f_path, f_type, startup);	//TODO: Calling this in Create instead of Close. Does it make a difference?
 	//Create .bin file. Open if already created
@@ -74,12 +74,9 @@ int DBFile::Create(char *f_path, fType f_type, SortInfo *startup) {
 	out.open("metadata.txt");
 	
 	if (f_type == heap) {
-		out << "heap\n";
 		this->internalVar = new HeapFile();
 	}
 	else {
-		out << "sorted\n";
-		out << startup->runlen << endl;
 		this->internalVar = new SortedFile();
 	}
 
@@ -137,6 +134,6 @@ int DBFile::GetNext(Record &fetchme, CNF &cnf, Record &literal) {
 	internalVar->GetNext(fetchme, cnf, literal);
 }
 
-void DBFile::Load(Schema &myschema, const char *loadpath) {
+void DBFile::Load(Schema &myschema, char *loadpath) {
 	internalVar->Load(myschema, loadpath);
 }

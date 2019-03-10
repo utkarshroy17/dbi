@@ -21,11 +21,11 @@ public:
 
 	HeapFile();
 
-	int Create(char *fpath, fType ftype, SortInfo *startup);
+	int Create(char *fpath, fType ftype, void *startup);
 	int Open(char *fpath);
 	int Close();
 
-	void Load(Schema &myschema, const char *loadpath);
+	void Load(Schema &myschema, char *loadpath);
 
 	void MoveFirst();
 	void Add(Record &addme);

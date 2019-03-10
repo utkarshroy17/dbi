@@ -90,19 +90,136 @@ void readMetaFile (char *f_path, OrderMaker *&o, int &rl) {
 	meta.close();
 }
 
-void SortedFile::MergeOutputPipeToFile(){	//TODO: Complete
+void SortedFile::MergeOutputPipeToFile() {	//TODO: Complete
 
 	cout << "MergeOutputPipeToFile \n";
-	char *region = "partsupp";
-	char *catalog_path = "catalog";
-	Schema *testSchema = new Schema(catalog_path, region);
+
+	Schema *testSchema = new Schema("catalog", "partsupp");
 
 	input->ShutDown();
 
-	Record *rec = new Record();
-	while (output->Remove(rec)) {
+	//ComparisonEngine *ce;
+
+	//toBeMerged = new Page();
+	//Record *recFromFile = new Record();
+	//pagePtrForMerge = 0;
+	////GetNew(recFromFile);
+
+	//Record *tempRec, *tempRecFromFile;
+	//Record *getRec = new Record();
+
+
+	//bool noMoreRecs = true;	
+	//int result = GetNew(recFromFile);
+	//int pageIndex = 1;
+	//bool leftIsSmaller = false;
+
+	//if (result == 0)
+	//	noMoreRecs = true;
+	
+	/*while (!noMoreRecs) {
+
+		if (output->Remove(getRec)) {
+
+			tempRec = new Record;
+			tempRec->Copy(getRec);
+
+			if (ce->Compare(tempRec, recFromFile, si->order) < 0) {
+				isPageEmpty = pageToWrite.Append(tempRec);
+				leftIsSmaller = true;
+			}
+			else {
+				isPageEmpty = pageToWrite.Append(recFromFile);
+				leftIsSmaller = false;
+			}
+				
+
+			if (isPageEmpty == 0) {
+				newFile.AddPage(&pageToWrite, pageIndex++);
+
+				pageToWrite.EmptyItOut();
+
+				if(leftIsSmaller)
+					pageToWrite.Append(tempRec);
+				else
+					pageToWrite.Append(recFromFile);
+			}
+
+			if (GetNew(recFromFile) == 0) {
+
+				noMoreRecs == true;
+				break;
+			}
+		}
+		else {
+			while (GetNew(recFromFile) != 0) {
+
+				tempRecFromFile = new Record;
+				tempRecFromFile->Copy(recFromFile);
+
+				isPageEmpty = pageToWrite.Append(tempRecFromFile);
+
+				if (isPageEmpty == 0) {
+
+					newFile.AddPage(&pageToWrite, pageIndex++);
+
+					pageToWrite.EmptyItOut();
+
+					pageToWrite.Append(tempRecFromFile);
+				}
+			}
+		}
+	}*/
+	Page *pageToWrite = new Page();
+	File newFile;
+	newFile.Open(0, "mergeFile");
+	Record* getRec = new Record();
+	int counter = 0;
+	int pageIndex = 0;
+	if (noMoreRecs == true) {
+		while (output->Remove(getRec)) {
+			counter++;
+			int isPageEmpty = pageToWrite->Append(getRec);
+			//cout << isPageEmpty << endl;
+			cout << "newfile length -- " << newFile.GetLength() << endl;
+			if (isPageEmpty == 0) {
+
+				cout << "newfile length" << newFile.GetLength();
+				newFile.AddPage(pageToWrite, pageIndex++);
+
+				pageToWrite->EmptyItOut();
+
+				pageToWrite->Append(getRec);
+				
+			}
+		}
+		output->ShutDown();
+	}
+	
+
+	newFile.AddPage(pageToWrite, pageIndex);
+	
+	cout << "newfile length" << newFile.GetLength();
+	newFile.Close();
+	currFile.Close();
+	/*while (output->Remove(tempRec)) {
 		cout << "Removing records from outPipe \n";
-		rec->Print(testSchema);	
+		tempRec->Print(testSchema);
+	}*/
+
+	currPage.EmptyItOut();	
+}
+
+int SortedFile::GetNew(Record *rec) {
+
+	cout << "getNew" << endl;
+	while (toBeMerged->GetFirst(rec)) {
+		if (pagePtrForMerge >= currFile.GetLength() - 1)
+			return 0;
+		else {
+			currFile.GetPage(toBeMerged, pagePtrForMerge);
+			pagePtrForMerge++;
+		}
 	}
 }
 
@@ -111,7 +228,7 @@ void SortedFile::ChangeReadToWrite(){
 		m = WRITE;
 		input = new Pipe(PIPE_SIZE);
 		output = new Pipe(PIPE_SIZE);
-		bq = new BigQ(*input, *output, *sortorder, runLength);
+		bq = new BigQ(*input, *output, *si->order, si->runlen);
 	}
 }
 
@@ -133,9 +250,9 @@ SortedFile::SortedFile(){
 		// output = new Pipe(100);
 }
 
-int SortedFile::Create(char *f_path, fType f_type, SortInfo *startup) {
-	sortorder = startup->order;
-	runLength = startup->runlen;
+int SortedFile::Create(char *f_path, fType f_type, void *startup) {
+	
+	si = (SortInfo *)startup;
 
 	//Create .bin file. Open if already created
 
@@ -143,7 +260,7 @@ int SortedFile::Create(char *f_path, fType f_type, SortInfo *startup) {
 	return 1;
 }
 
-void SortedFile::Load(Schema &f_schema, const char *loadpath) {
+void SortedFile::Load(Schema &f_schema, char *loadpath) {
 
 	// Load the data from the .tbl file to the .bin file
 	cout << loadpath << endl;
@@ -169,11 +286,16 @@ void SortedFile::Load(Schema &f_schema, const char *loadpath) {
 
 int SortedFile::Open(char *f_path) {
 	//Open .bin file
-	readMetaFile(f_path, sortorder, runLength);
+
+	if (si == NULL) {
+		si = new SortInfo;
+		si->order = new OrderMaker();
+	}
+	readMetaFile(f_path, si->order, si->runlen);
 	cout << "SortedFile::Open \n";
-	cout << "runLength is " << runLength << endl;
+	cout << "runLength is " << si->runlen << endl;
 	cout << "OrderMaker is ";
-	sortorder->Print();
+	si->order->Print();
 
 	currFile.Open(1, f_path);
 	return 1;
@@ -207,14 +329,14 @@ int SortedFile::Close() {
 
 	// }
 
-	// return currFile.Close();
+	return currFile.Close();
 }
 
 
 	
 void SortedFile::Add(Record &rec) {	
 	
-	cout << "Adding record to input pipe in SortedFile \n";
+	//cout << "Adding record to input pipe in SortedFile \n";
 	ChangeReadToWrite();
 	
 	// char *region = "partsupp";

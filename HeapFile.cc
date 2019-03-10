@@ -17,7 +17,7 @@ HeapFile::HeapFile() {
 	pageNumber = 0;
 }
 
-int HeapFile::Create(char *f_path, fType f_type, SortInfo *startup) {
+int HeapFile::Create(char *f_path, fType f_type, void *startup) {
 
 	//Create .bin file. Open if already created
 
@@ -25,7 +25,7 @@ int HeapFile::Create(char *f_path, fType f_type, SortInfo *startup) {
 	return 1;
 }
 
-void HeapFile::Load(Schema &f_schema, const char *loadpath) {
+void HeapFile::Load(Schema &f_schema, char *loadpath) {
 
 	// Load the data from the .tbl file to the .bin file
 	cout << loadpath << endl;

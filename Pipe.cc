@@ -73,7 +73,7 @@ void Pipe :: Insert (Record *insertMe) {
 
 	// done!
 	pthread_mutex_unlock (&pipeMutex);
-	cout << "2.Pipe Insert " << firstSlot << " " << lastSlot << endl;
+	//cout << "2.Pipe Insert " << firstSlot << " " << lastSlot << endl;
 }
 
 void Pipe::Get(){
@@ -81,7 +81,7 @@ void Pipe::Get(){
 }
 
 int Pipe :: Remove (Record *removeMe) {		//https://stackoverflow.com/questions/22288667/c-member-variable-losing-value-after-constructor
-	cout << "Calling Remove Pipe.cc " << firstSlot << " " << lastSlot << endl;	
+	//cout << "Calling Remove Pipe.cc " << firstSlot << " " << lastSlot << endl;	
 
 	// first, get a mutex on the pipeline
 	pthread_mutex_lock (&pipeMutex);
@@ -128,7 +128,7 @@ int Pipe :: Remove (Record *removeMe) {		//https://stackoverflow.com/questions/2
 	pthread_mutex_unlock (&pipeMutex);
 	return 1;
 
-	cout << "End of Remove, Pipe.cc \n";
+	//cout << "End of Remove, Pipe.cc \n";
 }
 
 

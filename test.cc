@@ -14,7 +14,7 @@ int add_data(FILE *src, int numrecs, int &res) {
 	int proc = 0;	
 	int xx = 20000;
 	while ((res = temp.SuckNextRecord(rel->schema(), src)) && ++proc <= numrecs) {	//Changed < numrecs to <= numrecs
-		cout << "\n Adding Record in add_data, test.cc  \n";
+		//cout << "\n Adding Record in add_data, test.cc  \n";
 		// temp.Print(rel->schema());
 		dbfile.Add(temp);		
 		if (proc == xx) cerr << "\t ";
@@ -38,7 +38,7 @@ void test1() {
 		cin >> runlen;*/
 	//}
 
-	SortInfo startup = { &o, runlen };
+	struct { OrderMaker *o; int l; } startup = { &o, runlen };
 
 	DBFile dbfile;
 	cout << "\n output to dbfile : " << rel->path() << endl;
@@ -54,8 +54,8 @@ void test1() {
 	srand48(time(NULL));
 
 	int proc = 1, res = 1, tot = 0;
-	// while (proc && res) {	//TODO: uncommented the while
-		int x = 1;
+	 //while (proc && res) {	//TODO: uncommented the while
+		int x = 2;
 		/*while (x < 1 || x > 3) {
 			cout << "\n select option for : " << rel->path() << endl;
 			cout << " \t 1. add a few (1 to 1k recs)\n";
@@ -72,7 +72,7 @@ void test1() {
 		else {
 			test3();
 		}
-	// }
+	 //}
 	cout << "\n create finished.. " << tot << " recs inserted\n";
 	fclose(tblfile);
 	dbfile.Close(); // TODO: Remove this line
