@@ -10,12 +10,24 @@
 #include "BigQ.h"
 #include <iostream>
 #include <fstream>
-#include "string.h"
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include <bits/stdc++.h> 
 
 #define PIPE_SIZE 100
 
-Record temp1;
+SortedFile::SortedFile() {
+	curPageIndex = 0;
+	pageFlag = 0;
+	pageNumber = 0;
+	m = READ;
+	readPageBuffer = new Page();
+	current = new Record();
+	OrderMaker *queryOrder = NULL;
+	// input = new Pipe(100);
+	// output = new Pipe(100);
+}
 
 void readMetaFile (char *f_path, OrderMaker *&o, int &rl) {
 
@@ -65,8 +77,10 @@ void readMetaFile (char *f_path, OrderMaker *&o, int &rl) {
 
 		OrderMaker *sortorder = new OrderMaker();
 		sortorder->Set(numAtts, whichAtts, whichTypes);
+		cout << "set order and runlen" << endl;
 		o = sortorder;
-		rl = runLength;
+		cout << "set order and runlen" << endl;
+		rl = runLength;		
 		// dummy.Print();
 		
 		// cout << "whichAtts ";
@@ -98,33 +112,38 @@ void SortedFile::MergeOutputPipeToFile() {	//TODO: Complete
 
 	input->ShutDown();
 
-	//ComparisonEngine *ce;
+	ComparisonEngine *ce;
 
-	//toBeMerged = new Page();
-	//Record *recFromFile = new Record();
-	//pagePtrForMerge = 0;
+	toBeMerged = new Page();
+	Record *recFromFile = new Record();
+	pagePtrForMerge = 0;
 	////GetNew(recFromFile);
 
-	//Record *tempRec, *tempRecFromFile;
-	//Record *getRec = new Record();
+	Record *tempRec, *tempRecFromFile;
+	Record *getRec = new Record();
+	Page pageToWrite;
+	File newFile;
 
+	newFile.Open(0, "mergeFile");
 
-	//bool noMoreRecs = true;	
-	//int result = GetNew(recFromFile);
-	//int pageIndex = 1;
-	//bool leftIsSmaller = false;
+	int pageIndex = 0;
 
-	//if (result == 0)
-	//	noMoreRecs = true;
+	bool noMoreRecs = true;	
+	int result = GetNew(recFromFile);
+	bool leftIsSmaller = false;
+	int isPageEmpty = 1;
+
+	if (result == 0)
+		noMoreRecs = true;
 	
-	/*while (!noMoreRecs) {
+	while (!noMoreRecs) {
 
 		if (output->Remove(getRec)) {
 
 			tempRec = new Record;
 			tempRec->Copy(getRec);
 
-			if (ce->Compare(tempRec, recFromFile, si->order) < 0) {
+			if (ce->Compare(tempRec, recFromFile, sortorder) < 0) {
 				isPageEmpty = pageToWrite.Append(tempRec);
 				leftIsSmaller = true;
 			}
@@ -169,45 +188,57 @@ void SortedFile::MergeOutputPipeToFile() {	//TODO: Complete
 				}
 			}
 		}
-	}*/
-	Page *pageToWrite = new Page();
-	File newFile;
-	newFile.Open(0, "mergeFile");
-	Record* getRec = new Record();
+	}
+
 	int counter = 0;
-	int pageIndex = 0;
+	
 	if (noMoreRecs == true) {
 		while (output->Remove(getRec)) {
 			counter++;
-			int isPageEmpty = pageToWrite->Append(getRec);
+			isPageEmpty = pageToWrite.Append(getRec);
 			//cout << isPageEmpty << endl;
-			cout << "newfile length -- " << newFile.GetLength() << endl;
+			//if (isPageEmpty == 1)
+				//cout << "newfile length -- " << newFile.GetLength() << endl;
 			if (isPageEmpty == 0) {
 
-				cout << "newfile length" << newFile.GetLength();
-				newFile.AddPage(pageToWrite, pageIndex++);
+				cout << "newfile length " << newFile.GetLength() << endl;
+				newFile.AddPage(&pageToWrite, pageIndex++);
 
-				pageToWrite->EmptyItOut();
+				pageToWrite.EmptyItOut();
 
-				pageToWrite->Append(getRec);
+				pageToWrite.Append(getRec);
 				
 			}
-		}
-		output->ShutDown();
+		}	
+		
 	}
 	
 
-	newFile.AddPage(pageToWrite, pageIndex);
+	newFile.AddPage(&pageToWrite, pageIndex);
 	
 	cout << "newfile length" << newFile.GetLength();
 	newFile.Close();
 	currFile.Close();
+
+	if (rename(fileName, "mergefile.tmp") != 0) {				// making merged file the new file
+		cerr << "rename file error!" << endl;
+		return;
+	}
+
+	remove("mergefile.tmp");
+
+	if (rename("mergeFile", fileName) != 0) {				// making merged file the new file
+		cerr << "rename file error!" << endl;
+		return;
+	}
+
 	/*while (output->Remove(tempRec)) {
 		cout << "Removing records from outPipe \n";
 		tempRec->Print(testSchema);
 	}*/
 
-	currPage.EmptyItOut();	
+	readPageBuffer->EmptyItOut();
+	currFile.Open(1, fileName);
 }
 
 int SortedFile::GetNew(Record *rec) {
@@ -228,7 +259,7 @@ void SortedFile::ChangeReadToWrite(){
 		m = WRITE;
 		input = new Pipe(PIPE_SIZE);
 		output = new Pipe(PIPE_SIZE);
-		bq = new BigQ(*input, *output, *si->order, si->runlen);
+		bq = new BigQ(*input, *output, *sortorder, runlen);
 	}
 }
 
@@ -241,19 +272,15 @@ void SortedFile::ChangeWriteToRead(){
 	}
 }
 
-SortedFile::SortedFile(){
-	curPageIndex = 0;
-	pageFlag = 0;
-	pageNumber = 0;
-	m = READ;
-		// input = new Pipe(100);
-		// output = new Pipe(100);
-}
 
 int SortedFile::Create(char *f_path, fType f_type, void *startup) {
 	
-	si = (SortInfo *)startup;
+	cout << f_path << endl;
+	fileName = new char[strlen(f_path) + 1];
+	strcpy(fileName, f_path);
 
+	endOfFile = 1;
+	pageIndex = 1;
 	//Create .bin file. Open if already created
 
 	currFile.Open(0, f_path);
@@ -263,39 +290,42 @@ int SortedFile::Create(char *f_path, fType f_type, void *startup) {
 void SortedFile::Load(Schema &f_schema, char *loadpath) {
 
 	// Load the data from the .tbl file to the .bin file
-	cout << loadpath << endl;
+
+	if (m != WRITE) {
+		m = WRITE;
+		if (bq == NULL)
+			bq = new BigQ(*input, *output, *sortorder, runlen);
+	}
 	FILE *tableFile = fopen(loadpath, "rb");
 
 	Record temp;
 
 	while (temp.SuckNextRecord(&f_schema, tableFile) == 1) {
 
-		isSpaceEmpty = currPage.Append(&temp);
-
-		if (!isSpaceEmpty) {
-			currFile.AddPage(&currPage, pageNumber);
-			currPage.EmptyItOut();
-			currPage.Append(&temp);
-			pageNumber++;
-		}
+		input->Insert(&temp);
 	}
 
-	currFile.AddPage(&currPage, pageNumber);
-	pageNumber++;
+	fclose(tableFile);
 }
 
 int SortedFile::Open(char *f_path) {
 	//Open .bin file
 
-	if (si == NULL) {
-		si = new SortInfo;
-		si->order = new OrderMaker();
-	}
-	readMetaFile(f_path, si->order, si->runlen);
+	fileName = new char[strlen(f_path) + 1];
+	strcpy(fileName, f_path);	
+
+	OrderMaker *o;
+	int runlen;
+	readMetaFile(f_path, sortorder, runlen);
 	cout << "SortedFile::Open \n";
-	cout << "runLength is " << si->runlen << endl;
+	
+	cout << "runLength is " << runlen << endl;
 	cout << "OrderMaker is ";
-	si->order->Print();
+	
+	
+	sortorder->Print();
+	endOfFile = 0;
+	pageIndex = 1;
 
 	currFile.Open(1, f_path);
 	return 1;
@@ -304,21 +334,38 @@ int SortedFile::Open(char *f_path) {
 void SortedFile::MoveFirst() {
 
 	//Move the pointer to the first record in the file
-	if (currFile.GetLength() - 1 < 0) {
-		cout << "File is empty" << endl;
-		return;
-	}
+	pageIndex = 1;
 
-	currFile.GetPage(&currPage, curPageIndex);
-	currFile.MoveFirst();
-	curPageIndex++;
-	pageFlag = 1;
+	if (m == READ) {
+		// In read mode, so direct movefirst is possible
+
+		if (currFile.GetLength() != 0) {
+			currFile.GetPage(readPageBuffer, pageIndex); 
+
+			int result = readPageBuffer->GetFirst(current);		
+		}
+		else {
+			
+
+		}
+	}
+	else {
+		// change mode to read
+		m = READ;
+		MergeOutputPipeToFile();
+		currFile.GetPage(readPageBuffer, pageIndex); 
+		readPageBuffer->GetFirst(current);
+
+	}
+	queryChange = true;
 }
 
 int SortedFile::Close() {
 
 	cout << "\n Calling SortedFile CLOSE \n ";
 	ChangeWriteToRead();
+
+	endOfFile = 1;
 	//Close an opened File
 
 	// if (m == WRITE) {
@@ -350,37 +397,192 @@ void SortedFile::Add(Record &rec) {
 int SortedFile::GetNext(Record &fetchme) {
 
 	//Get first page
-	if (pageFlag == 0) {
-		currFile.GetPage(&currPage, curPageIndex);
-		curPageIndex++;
-		pageFlag = 1;
+	if (m != READ) {
+		m = READ;
+		readPageBuffer->EmptyItOut();		// requires flush
+		MergeOutputPipeToFile();		// 
+		MoveFirst();	// always start from first record
+
 	}
 
-	//Get the next pages
-	if (currPage.GetFirst(&fetchme) == 1)
-		return 1;
-	else {
-		if (curPageIndex > currFile.GetLength() - 2)
+	if (endOfFile == 1) return 0;
+
+	fetchme.Copy(current);
+
+	if (!readPageBuffer->GetFirst(current)) {
+
+		if (pageIndex >= currFile.GetLength() - 2) {
+			endOfFile = 1;
 			return 0;
+		}
 		else {
-			currFile.GetPage(&currPage, curPageIndex);
-			curPageIndex++;
-			pageFlag++;
-			currPage.GetFirst(&fetchme);
-			return 1;
+			pageIndex++;
+			currFile.GetPage(readPageBuffer, pageIndex);
+			readPageBuffer->GetFirst(current);
+
 		}
 	}
+
+	return 1;
 }
 
 int SortedFile::GetNext(Record &fetchme, CNF &cnf, Record &literal) {
 
-	ComparisonEngine comp;
+	if (m != READ) {
 
-	while (GetNext(fetchme)) {
-		if (comp.Compare(&fetchme, &literal, &cnf)) {
+		m = READ;
+		readPageBuffer->EmptyItOut();
+		MergeOutputPipeToFile();
+		MoveFirst();
+	}
+
+	if (queryChange == true) {
+		queryOrder = cnf.CreateQueryMaker(*sortorder);
+	}
+
+	ComparisonEngine *comp;
+
+	if (queryOrder == NULL) {
+
+		while (GetNext(fetchme)) {
+
+
+			if (comp->Compare(&fetchme, &literal, &cnf)) {
+				return 1;
+			}
+		}
+		return 0;
+	}
+	else {
+
+		Record *r1 = new Record();
+
+		r1 = GetMatchPage(literal);
+
+		if (r1 == NULL) return 0;
+
+		fetchme.Consume(r1);
+		if (comp->Compare(&fetchme, &literal, &cnf)) {
 			return 1;
 		}
+
+		while (GetNext(fetchme)) {
+			if (comp->Compare(&fetchme, &literal, queryOrder) != 0) {
+				//not match to query order
+				return 0;
+			}
+			else {
+				if (comp->Compare(&fetchme, &literal, &cnf)) {
+					//find the right record
+					return 1;
+				}
+			}
+		}
+
 	}
 
 	return 0;
+}
+
+
+Record* SortedFile::GetMatchPage(Record &literal) {
+	
+	if (queryChange) {
+		int low = pageIndex;
+		int high = currFile.GetLength() - 2;
+		int matchPage = binarySearch(low, high, queryOrder, literal);
+		
+		if (matchPage == -1) {
+			
+			return NULL;
+		}
+		if (matchPage != pageIndex) {
+			readPageBuffer->EmptyItOut();
+			currFile.GetPage(readPageBuffer, matchPage);
+			pageIndex = matchPage + 1;
+		}
+		queryChange = false;
+	}
+
+	Record *returnRcd = new Record;
+	ComparisonEngine cmp1;
+	while (readPageBuffer->GetFirst(returnRcd)) {
+		if (cmp1.Compare(returnRcd, &literal, queryOrder) == 0) {
+			//find the first one
+			return returnRcd;
+		}
+	}
+	if (pageIndex >= currFile.GetLength() - 2) {
+		return NULL;
+	}
+	else {
+		//since the first record may exist on the next page
+		pageIndex++;
+		currFile.GetPage(readPageBuffer, pageIndex);
+		while (readPageBuffer->GetFirst(returnRcd)) {
+			if (cmp1.Compare(returnRcd, &literal, queryOrder) == 0) {
+				//find the first one
+				return returnRcd;
+			}
+		}
+	}
+	return NULL;
+}
+
+
+int SortedFile::binarySearch(int low, int high, OrderMaker *queryOM, Record &literal) {
+
+	cout << "serach OM " << endl;
+	queryOM->Print();
+	cout << endl << "file om" << endl;
+	sortorder->Print();
+
+	if (high < low) return -1;
+	if (high == low) return low;
+	//high > low
+
+	ComparisonEngine *comp;
+	Page *tmpPage = new Page;
+	Record *tmpRcd = new Record;
+	int mid = (int)(high + low) / 2;
+	currFile.GetPage(tmpPage, mid);
+
+	int res;
+
+	Schema nu("catalog", "lineitem");
+
+	tmpPage->GetFirst(tmpRcd);
+
+	tmpRcd->Print(&nu);
+
+	res = comp->Compare(tmpRcd, sortorder, &literal, queryOM);
+
+	//if(res==0){
+		//cout<<"FOUND!!!"<<endl;
+//		break;
+//		}
+
+
+	delete tmpPage;
+	delete tmpRcd;
+
+	//cout<<"compare result"<<res<<"\n";
+
+
+	if (res == -1) {
+		if (low == mid)
+			return mid;
+		return binarySearch(low, mid - 1, queryOM, literal);
+	}
+	else if (res == 0) {
+		return mid;//binarySearch(low, mid-1, queryOM, literal);
+	}
+	else
+		return binarySearch(mid + 1, high, queryOM, literal);
+}
+
+SortedFile::~SortedFile() {
+	delete readPageBuffer;
+	delete input;
+	delete output;
 }

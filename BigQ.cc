@@ -155,6 +155,7 @@ void *workerRoutine(void *arg){
 	Util* tu = (Util*)arg;
 	createRuns(tu);
 	mergeRuns(tu);
+	tu->outPipe->ShutDown();
 }
 
 

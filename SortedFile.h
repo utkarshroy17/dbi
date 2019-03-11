@@ -26,13 +26,10 @@ typedef enum { READ, WRITE } mode;
 //	OrderMaker *order;
 //}oututil;
 
-struct SortInfo {
-	OrderMaker *order;
-	int runlen;
-};
-
 
 class SortedFile : virtual public GenericDBFile {
+
+	char *fileName;
 	int pageNumber;
 	int isSpaceEmpty;
 	int curPageIndex;
@@ -42,9 +39,17 @@ class SortedFile : virtual public GenericDBFile {
 	File currFile;
 	Page *toBeMerged;
 	int pagePtrForMerge = 0;
-	SortInfo *si;
+	Page *readPageBuffer;
+	int pageIndex;
+	Record *current;
+	bool queryChange;
+	int endOfFile;
+	OrderMaker *queryOrder;
 	
 	ofstream out;
+
+	OrderMaker *sortorder;
+	int runlen;
 
 	mode m;
 	BigQ *bq;
@@ -54,6 +59,7 @@ class SortedFile : virtual public GenericDBFile {
 public:
 	/*SortedFile();*/
 	SortedFile();
+	~SortedFile();
 
 	int Create(char *fpath, fType ftype, void *startup);
 	int Open(char *fpath);
@@ -71,5 +77,6 @@ public:
 	void MergeOutputPipeToFile();
 	int GetNew(Record *rec);
 	
-	// void* consumer(void *arg);
+	int binarySearch(int low, int high, OrderMaker *queryOM, Record &literal);
+	Record* GetMatchPage(Record &literal);
 };

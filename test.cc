@@ -83,7 +83,9 @@ void test2() {
 
 	cout << " scan : " << rel->path() << "\n";
 	DBFile dbfile;
+	cout << "move first called" << endl;
 	dbfile.Open(rel->path());
+	
 	dbfile.MoveFirst();
 
 	Record temp;
@@ -91,6 +93,7 @@ void test2() {
 	int cnt = 0;
 	cerr << "\t";
 	while (dbfile.GetNext(temp) && ++cnt) {
+		/*cout << "call dbNext" << endl;*/
 		temp.Print(rel->schema());
 		if (cnt % 10000) {
 			cerr << ".";
