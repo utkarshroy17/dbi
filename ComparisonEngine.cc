@@ -18,10 +18,11 @@ int ComparisonEngine :: Compare(Record *left, Record *right, OrderMaker *orderUs
 	char *left_bits = left->GetBits();
 	char *right_bits = right->GetBits();
 
-	cout << "left record" << endl;
-	left->Print(testSchema);
-	cout << "right record" << endl;
-	right->Print(testSchema);
+	//cout << "right record  ";
+	//right->Print(testSchema);
+	//cout << "left record" << endl;
+	//left->Print(testSchema);
+
 
 
 	for (int i = 0; i < orderUs->numAtts; i++) {

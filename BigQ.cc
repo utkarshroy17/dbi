@@ -32,6 +32,8 @@ void mergeRuns(Util *tu) {
 
 	for (int i = 0; i < m; i++)
 		recordVector.push_back(NULL);
+	
+	int count = 0;
 		
 	while (pageVector.size() > 0) {
 				
@@ -57,14 +59,17 @@ void mergeRuns(Util *tu) {
 				min = j;
 		}
 		if (recordVector.size() > 0) {
+			//Schema *testSchema = new Schema("catalog", "region");
+			//recordVector[min]->Print(testSchema);
 			tu->outPipe->Insert(recordVector[min]);
-
+			count++;
 			recordVector[min] = NULL;
 			min = 0;
 		}
 		
 	}
 	
+	cout << "count in outpipe " << count << endl;
 	file.Close();
 
 }

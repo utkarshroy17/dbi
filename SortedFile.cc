@@ -134,109 +134,182 @@ void SortedFile::MergeOutputPipeToFile() {
 	
 	//recFromFile->Print(testSchema);
 	bool noMoreRecs = false;	
-	int result = GetNew(recFromFile);
+	//int result = GetNew(recFromFile);
 	/*tempRecFromFile = new Record;
 	tempRecFromFile->Copy(recFromFile);*/
 	bool leftIsSmaller = false;
 	int isPageEmpty = 1;
 
-	cout << "result = " << result << endl;
-	if (result == 0)
-		noMoreRecs = true;
+	//cout << "result = " << result << endl;
+	//if (result == 0)
+	//	noMoreRecs = true;
 	
-	while (!noMoreRecs) {	//while there are file recs
-
-		if (getRec == NULL)
-			cout << "get rec is null" << endl;
-		if(recFromFile == NULL)
-			cout << "rec from file is null" << endl;
-
-		if (output->Remove(getRec)) {	//if there are pipe recs
-
-			/*tempRec = new Record;
-			tempRec->Copy(getRec);*/
-
-			while (ce->Compare(recFromFile, getRec, sortorder) < 0) {	//while file rec < pipe rec
-
-				/*tempRecFromFile = new Record;
-				tempRecFromFile->Copy(recFromFile);*/
-
-				isPageEmpty = pageToWrite.Append(recFromFile);
-
-				if (isPageEmpty == 0) {
-
-					newFile.AddPage(&pageToWrite, pageIndex++);
-
-					pageToWrite.EmptyItOut();
-					pageToWrite.Append(recFromFile);
-				}
-
-				if (GetNew(recFromFile) == 0) {
-
-					/*tempRecFromFile = new Record;
-					tempRecFromFile->Copy(recFromFile);*/
-					noMoreRecs == true;
-					break;
-				}
-
-				if (getRec == NULL)
-					cout << "get rec is null in 2nd while" << endl;
-				if (recFromFile == NULL)
-					cout << "rec from file is null in 2nd while" << endl;
-
-			}
-
-			if (pageToWrite.Append(getRec) == 0) {
-
+	int pipeEmpty;
+	int fileEmpty;
+	Record *pipeRec = new Record();
+	//pipeRec = NULL;
+	Record *fileRec = new Record();
+	//fileRec = NULL;
+	bool noPipeRec = true;
+	bool noFileRec = true;
+	
+	while (1) {
+		if (noPipeRec) {
+			pipeEmpty = !output->Remove(pipeRec);
+			if (pipeEmpty)
+				break;
+			noPipeRec = false;
+		}
+		if (noFileRec) {
+			fileEmpty = !GetNew(fileRec);
+			if (fileEmpty)
+				break;
+			noFileRec = false;
+		}
+		if (ce->Compare(fileRec, pipeRec, sortorder) < 0) {
+			isPageEmpty = pageToWrite.Append(fileRec);
+			if (isPageEmpty == 0) {
 				newFile.AddPage(&pageToWrite, pageIndex++);
-
 				pageToWrite.EmptyItOut();
-				pageToWrite.Append(getRec);
+				pageToWrite.Append(fileRec);
 			}
-			
+			noFileRec = true;
 		}
 		else {
-
-			do {
-
-				/*tempRecFromFile = new Record;
-				tempRecFromFile->Copy(recFromFile);*/
-
-				isPageEmpty = pageToWrite.Append(recFromFile);
-
-				if (isPageEmpty == 0) {
-
-					newFile.AddPage(&pageToWrite, pageIndex++);
-
-					pageToWrite.EmptyItOut();
-
-					pageToWrite.Append(recFromFile);
-				}
-			} while (GetNew(recFromFile) != 0);
-			break;
+			isPageEmpty = pageToWrite.Append(pipeRec);
+			if (isPageEmpty == 0) {
+				newFile.AddPage(&pageToWrite, pageIndex++);
+				pageToWrite.EmptyItOut();
+				pageToWrite.Append(pipeRec);
+			}
+			noPipeRec = true;
 		}
 	}
-
-	
-	if (noMoreRecs == true) {
-		while (output->Remove(getRec)) {
-			isPageEmpty = pageToWrite.Append(getRec);
-			//cout << isPageEmpty << endl;
-			//if (isPageEmpty == 1)
-				//cout << "newfile length -- " << newFile.GetLength() << endl;
+	if (pipeEmpty) {
+		cout << "\n\n\n\n\n\nPipe Empty \n";
+		if (!noFileRec) {
+			isPageEmpty = pageToWrite.Append(fileRec);
 			if (isPageEmpty == 0) {
-
-				cout << "newfile length " << newFile.GetLength() << endl;
 				newFile.AddPage(&pageToWrite, pageIndex++);
-
 				pageToWrite.EmptyItOut();
-
-				pageToWrite.Append(getRec);
-				
+				pageToWrite.Append(fileRec);
 			}
-		} 
-		
+		}
+		while (GetNew(fileRec)) {
+			isPageEmpty = pageToWrite.Append(fileRec);
+			if (isPageEmpty == 0) {
+				newFile.AddPage(&pageToWrite, pageIndex++);
+				pageToWrite.EmptyItOut();
+				pageToWrite.Append(fileRec);
+			}
+		}
 	}
+	else if (fileEmpty) {
+		cout << "\n\n\n\n\n\nFile Empty \n";
+		//skipping one pipeRec
+		 do {
+			isPageEmpty = pageToWrite.Append(pipeRec);
+			if (isPageEmpty == 0) {
+				newFile.AddPage(&pageToWrite, pageIndex++);
+				pageToWrite.EmptyItOut();
+				pageToWrite.Append(pipeRec);
+			}
+		 } while (output->Remove(pipeRec));
+	}
+
+	//while (!noMoreRecs) {	//while there are file recs
+
+	//	if (getRec == NULL)
+	//		cout << "get rec is null" << endl;
+	//	if(recFromFile == NULL)
+	//		cout << "rec from file is null" << endl;
+
+	//	if (output->Remove(getRec)) {	//if there are pipe recs
+
+	//		/*tempRec = new Record;
+	//		tempRec->Copy(getRec);*/
+
+	//		while (ce->Compare(recFromFile, getRec, sortorder) < 0) {	//while file rec < pipe rec
+
+	//			/*tempRecFromFile = new Record;
+	//			tempRecFromFile->Copy(recFromFile);*/
+
+	//			isPageEmpty = pageToWrite.Append(recFromFile);
+
+	//			if (isPageEmpty == 0) {
+
+	//				newFile.AddPage(&pageToWrite, pageIndex++);
+
+	//				pageToWrite.EmptyItOut();
+	//				pageToWrite.Append(recFromFile);
+	//			}
+
+	//			if (GetNew(recFromFile) == 0) {
+
+	//				/*tempRecFromFile = new Record;
+	//				tempRecFromFile->Copy(recFromFile);*/
+	//				noMoreRecs == true;
+	//				break;
+	//			}
+
+	//			if (getRec == NULL)
+	//				cout << "get rec is null in 2nd while" << endl;
+	//			if (recFromFile == NULL)
+	//				cout << "rec from file is null in 2nd while" << endl;
+
+	//		}
+
+	//		if (pageToWrite.Append(getRec) == 0) {
+
+	//			newFile.AddPage(&pageToWrite, pageIndex++);
+
+	//			pageToWrite.EmptyItOut();
+	//			pageToWrite.Append(getRec);
+	//		}
+	//		
+	//	}
+	//	else {
+
+	//		do {
+
+	//			/*tempRecFromFile = new Record;
+	//			tempRecFromFile->Copy(recFromFile);*/
+
+	//			isPageEmpty = pageToWrite.Append(recFromFile);
+
+	//			if (isPageEmpty == 0) {
+
+	//				newFile.AddPage(&pageToWrite, pageIndex++);
+
+	//				pageToWrite.EmptyItOut();
+
+	//				pageToWrite.Append(recFromFile);
+	//			}
+	//		} while (GetNew(recFromFile) != 0);
+	//		break;
+	//	}
+	//}
+
+	//
+	//if (noMoreRecs == true) {
+	//	while (output->Remove(getRec)) {
+	//		isPageEmpty = pageToWrite.Append(getRec);
+	//		//cout << isPageEmpty << endl;
+	//		//if (isPageEmpty == 1)
+	//			//cout << "newfile length -- " << newFile.GetLength() << endl;
+	//		if (isPageEmpty == 0) {
+
+	//			cout << "newfile length " << newFile.GetLength() << endl;
+	//			newFile.AddPage(&pageToWrite, pageIndex++);
+
+	//			pageToWrite.EmptyItOut();
+
+	//			pageToWrite.Append(getRec);
+	//			
+	//		}
+	//	} 
+	//	
+	//}
 	
 	cout << "newfile length 1 - " << newFile.GetLength() << endl;
 
