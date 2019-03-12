@@ -7,3 +7,6 @@
 .vs/
 mergeFile
 *.bin.header
+
+#File generated in BigQ with sorted runs
+temp 

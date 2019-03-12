@@ -128,7 +128,7 @@ void SortedFile::MergeOutputPipeToFile() {
 
 	int pageIndex = 0;
 
-	GetNew(recFromFile);
+	//GetNew(recFromFile);
 	/*tempRecFromFile = new Record;
 	tempRecFromFile->Copy(recFromFile);*/
 	
@@ -144,26 +144,31 @@ void SortedFile::MergeOutputPipeToFile() {
 	if (result == 0)
 		noMoreRecs = true;
 	
-	while (!noMoreRecs) {
+	while (!noMoreRecs) {	//while there are file recs
 
-		if (output->Remove(getRec)) {
+		if (getRec == NULL)
+			cout << "get rec is null" << endl;
+		if(recFromFile == NULL)
+			cout << "rec from file is null" << endl;
 
-			tempRec = new Record;
-			tempRec->Copy(getRec);
+		if (output->Remove(getRec)) {	//if there are pipe recs
 
-			while (ce->Compare(recFromFile, tempRec, sortorder) < 0) {
+			/*tempRec = new Record;
+			tempRec->Copy(getRec);*/
 
-				tempRecFromFile = new Record;
-				tempRecFromFile->Copy(recFromFile);
+			while (ce->Compare(recFromFile, getRec, sortorder) < 0) {	//while file rec < pipe rec
 
-				isPageEmpty = pageToWrite.Append(tempRecFromFile);
+				/*tempRecFromFile = new Record;
+				tempRecFromFile->Copy(recFromFile);*/
+
+				isPageEmpty = pageToWrite.Append(recFromFile);
 
 				if (isPageEmpty == 0) {
 
 					newFile.AddPage(&pageToWrite, pageIndex++);
 
 					pageToWrite.EmptyItOut();
-					pageToWrite.Append(tempRecFromFile);
+					pageToWrite.Append(recFromFile);
 				}
 
 				if (GetNew(recFromFile) == 0) {
@@ -174,50 +179,30 @@ void SortedFile::MergeOutputPipeToFile() {
 					break;
 				}
 
+				if (getRec == NULL)
+					cout << "get rec is null in 2nd while" << endl;
+				if (recFromFile == NULL)
+					cout << "rec from file is null in 2nd while" << endl;
+
 			}
 
-			if (pageToWrite.Append(tempRec) == 0) {
+			if (pageToWrite.Append(getRec) == 0) {
 
 				newFile.AddPage(&pageToWrite, pageIndex++);
 
 				pageToWrite.EmptyItOut();
-				pageToWrite.Append(tempRec);
+				pageToWrite.Append(getRec);
 			}
-
-			/*tempRec = new Record;
-			tempRec->Copy(getRec);
-
-			if (ce->Compare(tempRec, recFromFile, sortorder) < 0) {
-				isPageEmpty = pageToWrite.Append(tempRec);
-				leftIsSmaller = true;
-			}
-			else {
-				isPageEmpty = pageToWrite.Append(recFromFile);
-				leftIsSmaller = false;
-			}
-				
-
-			if (isPageEmpty == 0) {
-				newFile.AddPage(&pageToWrite, pageIndex++);
-
-				pageToWrite.EmptyItOut();
-
-				if(leftIsSmaller)
-					pageToWrite.Append(tempRec);
-				else
-					pageToWrite.Append(recFromFile);
-			}*/
-
 			
 		}
 		else {
 
-			while (GetNew(recFromFile) != 0) {
+			do {
 
-				tempRecFromFile = new Record;
-				tempRecFromFile->Copy(recFromFile);
+				/*tempRecFromFile = new Record;
+				tempRecFromFile->Copy(recFromFile);*/
 
-				isPageEmpty = pageToWrite.Append(tempRecFromFile);
+				isPageEmpty = pageToWrite.Append(recFromFile);
 
 				if (isPageEmpty == 0) {
 
@@ -225,16 +210,16 @@ void SortedFile::MergeOutputPipeToFile() {
 
 					pageToWrite.EmptyItOut();
 
-					pageToWrite.Append(tempRecFromFile);
+					pageToWrite.Append(recFromFile);
 				}
-			}
+			} while (GetNew(recFromFile) != 0);
 			break;
 		}
 	}
 
 	
 	if (noMoreRecs == true) {
-		while (output->Remove(getRec)) {
+		 do {
 			isPageEmpty = pageToWrite.Append(getRec);
 			//cout << isPageEmpty << endl;
 			//if (isPageEmpty == 1)
@@ -249,7 +234,7 @@ void SortedFile::MergeOutputPipeToFile() {
 				pageToWrite.Append(getRec);
 				
 			}
-		}	
+		} while (output->Remove(getRec));
 		
 	}
 	

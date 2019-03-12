@@ -3,14 +3,6 @@
 #include "DBFile.h"
 #include "test.h"
 
-const char *dbfile_dir = ""; // dir where binary heap files should be stored
-const char *tpch_dir = "./"; // dir where dbgen tpch files (extension *.tbl) can be found
-const char *catalog_path = "catalog"; // full path of the catalog file
-
-using namespace std;
-
-relation * rel;
-
 int add_data(FILE *src, int numrecs, int &res) {
 	DBFile dbfile;
 	dbfile.Open(rel->path());
@@ -31,23 +23,92 @@ int add_data(FILE *src, int numrecs, int &res) {
 	return proc;
 }
 
-TEST(DBFileGoogleTest1, Sort) {
+TEST(DBFileGoogleTest1, SortSmall) {
+
+	OrderMaker o;
+	rel->get_sort_order(o);
+
+	int runlen = 3;
+	//while (runlen < 1) {
+	///*	cout << "\t\n specify runlength:\n\t ";
+	//	cin >> runlen;*/
+	//}
+
+	struct { OrderMaker *o; int l; } startup = { &o, runlen };
 
 	DBFile dbfile;
-	cout << " DBFile will be created at " << rel->path() << endl;
-	dbfile.Create(rel->path(), heap, NULL);
-
-	char tbl_path[100]; // construct path of the tpch flat text file
-	sprintf(tbl_path, "%s%s.tbl", tpch_dir, rel->name());
-	cout << " tpch file will be loaded from " << tbl_path << endl;
-	dbfile.Load(*(rel->schema()), tbl_path);
-	/*EXPECT_EQ(NULL, );*/
-	EXPECT_EQ(1, 1);
+	cout << "\n output to dbfile : " << rel->path() << endl;
+	dbfile.Create(rel->path(), sorted, &startup);
 	dbfile.Close();
+
+	char tbl_path[100];
+	sprintf(tbl_path, "%s%s.tbl", tpch_dir, rel->name());
+	cout << " input from file : " << tbl_path << endl;
+
+	FILE *tblfile = fopen(tbl_path, "r");
+
+	srand48(time(NULL));
+
+	int x = 2;
+	int proc = 1, res = 1, tot = 0;
+	while (proc && res) {
+
+		proc = add_data(tblfile, lrand48() % (int)pow(1e3, x) + (x - 1) * 1000, res);
+		tot += proc;
+		if (proc)
+			cout << "\n\t added " << proc << " recs..so far " << tot << endl;
+
+	}
+	cout << "\n create finished.. " << tot << " recs inserted\n";
+	fclose(tblfile);
+	EXPECT_EQ(8000, tot);
 
 }
 
-TEST(DBFileGoogleTest1, Scan) {
+TEST(DBFileGoogleTest2, SortBig) {
+
+	OrderMaker o;
+	rel->get_sort_order(o);
+
+	int runlen = 3;
+	//while (runlen < 1) {
+	///*	cout << "\t\n specify runlength:\n\t ";
+	//	cin >> runlen;*/
+	//}
+
+	struct { OrderMaker *o; int l; } startup = { &o, runlen };
+
+	DBFile dbfile;
+	cout << "\n output to dbfile : " << rel->path() << endl;
+	dbfile.Create(rel->path(), sorted, &startup);
+	dbfile.Close();
+
+	char tbl_path[100];
+	sprintf(tbl_path, "%s%s.tbl", tpch_dir, rel->name());
+	cout << " input from file : " << tbl_path << endl;
+
+	FILE *tblfile = fopen(tbl_path, "r");
+
+	srand48(time(NULL));
+
+	int x = 1;
+	int proc = 1, res = 1, tot = 0;
+	while (proc && res) {
+
+		proc = add_data(tblfile, lrand48() % (int)pow(1e3, x) + (x - 1) * 1000, res);
+		tot += proc;
+		if (proc)
+			cout << "\n\t added " << proc << " recs..so far " << tot << endl;
+
+	}
+	cout << "\n create finished.. " << tot << " recs inserted\n";
+	fclose(tblfile);
+	EXPECT_EQ(8000, tot);
+
+}
+
+
+TEST(DBFileGoogleTest3, Scan) {
 
 	DBFile dbfile;
 	dbfile.Open(rel->path());
@@ -75,7 +136,7 @@ int main(int argc, char** argv) {
 	setup(catalog_path, dbfile_dir, tpch_dir);
 
 	relation *rel_ptr[] = { n, r, c, p, ps, o, li };
-	rel = rel_ptr[3];
+	rel = rel_ptr[4];
 
 	return RUN_ALL_TESTS();
 }
