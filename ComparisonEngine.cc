@@ -13,8 +13,16 @@ int ComparisonEngine :: Compare(Record *left, Record *right, OrderMaker *orderUs
 
 	char *val1, *val2;
 
+	Schema *testSchema = new Schema("catalog", "partsupp");
+
 	char *left_bits = left->GetBits();
 	char *right_bits = right->GetBits();
+
+	cout << "left record" << endl;
+	left->Print(testSchema);
+	cout << "right record" << endl;
+	right->Print(testSchema);
+
 
 	for (int i = 0; i < orderUs->numAtts; i++) {
 		val1 = left_bits + ((int *) left_bits)[orderUs->whichAtts[i] + 1];

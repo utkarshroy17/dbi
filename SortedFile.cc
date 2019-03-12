@@ -219,7 +219,7 @@ void SortedFile::MergeOutputPipeToFile() {
 
 	
 	if (noMoreRecs == true) {
-		 do {
+		while (output->Remove(getRec)) {
 			isPageEmpty = pageToWrite.Append(getRec);
 			//cout << isPageEmpty << endl;
 			//if (isPageEmpty == 1)
@@ -234,7 +234,7 @@ void SortedFile::MergeOutputPipeToFile() {
 				pageToWrite.Append(getRec);
 				
 			}
-		} while (output->Remove(getRec));
+		} 
 		
 	}
 	
