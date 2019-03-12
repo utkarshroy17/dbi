@@ -15,7 +15,7 @@ typedef enum { heap, sorted, tree } fType;
 
 class GenericDBFile {
 	
-public: //TODO: Why are all these functions public?
+public: 
 	virtual int Create(char *fpath, fType ftype, void *startup) = 0;
 	virtual int Open(char *fpath) = 0;
 	virtual int Close() = 0;

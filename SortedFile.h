@@ -12,20 +12,6 @@
 
 typedef enum { READ, WRITE } mode;
 
-//typedef struct {
-//
-//	Pipe *pipe;
-//	Record rec;
-//
-//}inutil;
-//
-//typedef struct {
-//
-//	Pipe *inpipe;
-//	Pipe *outpipe;
-//	OrderMaker *order;
-//}oututil;
-
 
 class SortedFile : virtual public GenericDBFile {
 

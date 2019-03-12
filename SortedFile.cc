@@ -104,11 +104,10 @@ void readMetaFile (char *f_path, OrderMaker *&o, int &rl) {
 	meta.close();
 }
 
-void SortedFile::MergeOutputPipeToFile() {	//TODO: Complete
+void SortedFile::MergeOutputPipeToFile() {	
 
 	cout << "MergeOutputPipeToFile \n";
 
-	Schema *testSchema = new Schema("catalog", "partsupp");
 
 	input->ShutDown();
 
@@ -118,6 +117,7 @@ void SortedFile::MergeOutputPipeToFile() {	//TODO: Complete
 	Record *recFromFile = new Record();
 	pagePtrForMerge = 0;
 	////GetNew(recFromFile);
+	Schema *testSchema = new Schema("catalog", "partsupp");
 
 	Record *tempRec, *tempRecFromFile;
 	Record *getRec = new Record();
@@ -128,11 +128,19 @@ void SortedFile::MergeOutputPipeToFile() {	//TODO: Complete
 
 	int pageIndex = 0;
 
-	bool noMoreRecs = true;	
+	GetNew(recFromFile);
+	/*tempRecFromFile = new Record;
+	tempRecFromFile->Copy(recFromFile);*/
+	
+	//recFromFile->Print(testSchema);
+	bool noMoreRecs = false;	
 	int result = GetNew(recFromFile);
+	/*tempRecFromFile = new Record;
+	tempRecFromFile->Copy(recFromFile);*/
 	bool leftIsSmaller = false;
 	int isPageEmpty = 1;
 
+	cout << "result = " << result << endl;
 	if (result == 0)
 		noMoreRecs = true;
 	
@@ -141,6 +149,42 @@ void SortedFile::MergeOutputPipeToFile() {	//TODO: Complete
 		if (output->Remove(getRec)) {
 
 			tempRec = new Record;
+			tempRec->Copy(getRec);
+
+			while (ce->Compare(recFromFile, tempRec, sortorder) < 0) {
+
+				tempRecFromFile = new Record;
+				tempRecFromFile->Copy(recFromFile);
+
+				isPageEmpty = pageToWrite.Append(tempRecFromFile);
+
+				if (isPageEmpty == 0) {
+
+					newFile.AddPage(&pageToWrite, pageIndex++);
+
+					pageToWrite.EmptyItOut();
+					pageToWrite.Append(tempRecFromFile);
+				}
+
+				if (GetNew(recFromFile) == 0) {
+
+					/*tempRecFromFile = new Record;
+					tempRecFromFile->Copy(recFromFile);*/
+					noMoreRecs == true;
+					break;
+				}
+
+			}
+
+			if (pageToWrite.Append(tempRec) == 0) {
+
+				newFile.AddPage(&pageToWrite, pageIndex++);
+
+				pageToWrite.EmptyItOut();
+				pageToWrite.Append(tempRec);
+			}
+
+			/*tempRec = new Record;
 			tempRec->Copy(getRec);
 
 			if (ce->Compare(tempRec, recFromFile, sortorder) < 0) {
@@ -162,15 +206,12 @@ void SortedFile::MergeOutputPipeToFile() {	//TODO: Complete
 					pageToWrite.Append(tempRec);
 				else
 					pageToWrite.Append(recFromFile);
-			}
+			}*/
 
-			if (GetNew(recFromFile) == 0) {
-
-				noMoreRecs == true;
-				break;
-			}
+			
 		}
 		else {
+
 			while (GetNew(recFromFile) != 0) {
 
 				tempRecFromFile = new Record;
@@ -187,14 +228,13 @@ void SortedFile::MergeOutputPipeToFile() {	//TODO: Complete
 					pageToWrite.Append(tempRecFromFile);
 				}
 			}
+			break;
 		}
 	}
 
-	int counter = 0;
 	
 	if (noMoreRecs == true) {
 		while (output->Remove(getRec)) {
-			counter++;
 			isPageEmpty = pageToWrite.Append(getRec);
 			//cout << isPageEmpty << endl;
 			//if (isPageEmpty == 1)
@@ -213,10 +253,11 @@ void SortedFile::MergeOutputPipeToFile() {	//TODO: Complete
 		
 	}
 	
+	cout << "newfile length 1 - " << newFile.GetLength() << endl;
 
 	newFile.AddPage(&pageToWrite, pageIndex);
 	
-	cout << "newfile length" << newFile.GetLength();
+	cout << "newfile length 2 - " << newFile.GetLength() << endl;
 	newFile.Close();
 	currFile.Close();
 
@@ -232,19 +273,16 @@ void SortedFile::MergeOutputPipeToFile() {	//TODO: Complete
 		return;
 	}
 
-	/*while (output->Remove(tempRec)) {
-		cout << "Removing records from outPipe \n";
-		tempRec->Print(testSchema);
-	}*/
-
 	readPageBuffer->EmptyItOut();
 	currFile.Open(1, fileName);
 }
 
 int SortedFile::GetNew(Record *rec) {
 
-	cout << "getNew" << endl;
-	while (toBeMerged->GetFirst(rec)) {
+	//cout << "getNew " << currFile.GetLength() << " page pointer " << pagePtrForMerge << endl;
+	Schema *testSchema = new Schema("catalog", "partsupp");
+
+	while (!this->toBeMerged->GetFirst(rec)) {
 		if (pagePtrForMerge >= currFile.GetLength() - 1)
 			return 0;
 		else {
@@ -267,6 +305,7 @@ void SortedFile::ChangeWriteToRead(){
 	cout << "ChangeWriteToRead \n";
 	if(m == WRITE){
 		m = READ;
+		readPageBuffer->EmptyItOut();
 		MergeOutputPipeToFile();
 		MoveFirst();
 	}
@@ -334,7 +373,7 @@ int SortedFile::Open(char *f_path) {
 void SortedFile::MoveFirst() {
 
 	//Move the pointer to the first record in the file
-	pageIndex = 1;
+	pageIndex = 0;
 
 	if (m == READ) {
 		// In read mode, so direct movefirst is possible
@@ -366,15 +405,6 @@ int SortedFile::Close() {
 	ChangeWriteToRead();
 
 	endOfFile = 1;
-	//Close an opened File
-
-	// if (m == WRITE) {
-	// 	oututil o = { &input, &output, &sortorder };
-
-
-	// 	BigQ bq(input, output, sortorder, 2);
-
-	// }
 
 	return currFile.Close();
 }
@@ -386,24 +416,13 @@ void SortedFile::Add(Record &rec) {
 	//cout << "Adding record to input pipe in SortedFile \n";
 	ChangeReadToWrite();
 	
-	// char *region = "partsupp";
-	// char *catalog_path = "catalog";
-	// Schema *testSchema = new Schema(catalog_path, region);	//TODO: this is hardcoded to religion. Change it
-	// rec.Print(testSchema);
-	
-	input->Insert(&rec);	//TODO: uncomment this
+	input->Insert(&rec);	
 }
 
 int SortedFile::GetNext(Record &fetchme) {
 
 	//Get first page
-	if (m != READ) {
-		m = READ;
-		readPageBuffer->EmptyItOut();		// requires flush
-		MergeOutputPipeToFile();		// 
-		MoveFirst();	// always start from first record
-
-	}
+	ChangeWriteToRead();
 
 	if (endOfFile == 1) return 0;
 
@@ -428,13 +447,7 @@ int SortedFile::GetNext(Record &fetchme) {
 
 int SortedFile::GetNext(Record &fetchme, CNF &cnf, Record &literal) {
 
-	if (m != READ) {
-
-		m = READ;
-		readPageBuffer->EmptyItOut();
-		MergeOutputPipeToFile();
-		MoveFirst();
-	}
+	ChangeWriteToRead();
 
 	if (queryChange == true) {
 		queryOrder = cnf.CreateQueryMaker(*sortorder);

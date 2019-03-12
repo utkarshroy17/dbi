@@ -5,8 +5,6 @@
 ComparisonEngine ceng;
 OrderMaker *g_order;
 File tempFile;
-int PageNumber = 0;	//TODO: Move this and recVector inside CreateRuns
-vector<Record*> recVector;
 
 //TODO : Remove region and catalog path
 void mergeRuns(Util *tu) {
@@ -81,7 +79,7 @@ bool compRecs(Record *left, Record *right)
 		return false;
 }
 
-void addRunToFile() {
+void addRunToFile(vector<Record*> recVector, int PageNumber) {
 	Record *curRec = NULL;
 	Page curPage;
 	int isPageEmpty;
@@ -109,7 +107,9 @@ void createRuns(Util *tu) {
 	Record *getRec = new Record();
 	Page curPage, tempPage;
 	tempFile.Open(0, "temp");
-	
+	vector<Record*> recVector;
+	int PageNumber = 0;
+
 	char *region = "partsupp";
 	char *catalog_path = "catalog";
 	Schema *testSchema = new Schema(catalog_path, region);	//TODO: this is hardcoded to religion. Change it
@@ -131,7 +131,7 @@ void createRuns(Util *tu) {
 			numPages++;
 			if (numPages == tu->runLen) {
 				sort(recVector.begin(), recVector.end(), compRecs);
-				addRunToFile();
+				addRunToFile(recVector, PageNumber);
 				numPages = 0;
 				recVector.clear();
 			}
@@ -140,7 +140,7 @@ void createRuns(Util *tu) {
 
 	if (recVector.size() > 0) {
 		sort(recVector.begin(), recVector.end(), compRecs);
-		addRunToFile();
+		addRunToFile(recVector, PageNumber);
 		recVector.clear();
 		numPages = 0;
 		numRuns++;
@@ -171,13 +171,10 @@ BigQ :: BigQ (Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen) {
 	pthread_create(&worker, NULL, workerRoutine, (void *)util);
 
 	cout << "Worker Thread Created BigQ.cc \n";
-	// pthread_join(worker, NULL); //TODO: When to call BigQ worker thread join?
-	// cout << "Worker Thread joined BigQ.cc \n";
 
   // construct priority queue over sorted runs and dump sorted data into the out pipe
   // finally shut down the out pipe
 	
-	// out.ShutDown();
 	
 }
 

@@ -5,3 +5,5 @@
 *.bin
 
 .vs/
+mergeFile
+*.bin.header

@@ -147,5 +147,7 @@ void Pipe :: ShutDown () {
 
 	// unlock the mutex
 	pthread_mutex_unlock (&pipeMutex);
+
+	cout << "shutdown completed" << endl;
 	
 }
